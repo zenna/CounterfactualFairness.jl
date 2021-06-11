@@ -1,0 +1,6 @@
+[deps]
+CounterfactualFairness = "6e04bf8c-77cf-4715-8f75-85007138f530"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+
+[compat]
+Documenter = "0.26"

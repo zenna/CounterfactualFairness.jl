@@ -1,0 +1,7 @@
+name = "CounterfactualFairness"
+uuid = "6e04bf8c-77cf-4715-8f75-85007138f530"
+authors = ["archanarw <47085068+archanarw@users.noreply.github.com>"]
+version = "0.1.0"
+
+[deps]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
