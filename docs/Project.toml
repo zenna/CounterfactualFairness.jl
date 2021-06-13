@@ -1,5 +1,5 @@
 [deps]
-CounterfactualFairness = "6e04bf8c-77cf-4715-8f75-85007138f530"
+CounterfactualFairness = "0fc997c1-ea37-4637-bdc9-9f86205e1dfa"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 
 [compat]
