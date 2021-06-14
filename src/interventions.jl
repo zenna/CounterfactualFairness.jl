@@ -30,19 +30,20 @@ DifferentiableIntervention(X, x, model::CausalModel, context::Context) =
     DifferentiableIntervention(X, [x], model, context)
 
 """
-`Intervention(X, x, model::CausalModel, context::Context)`
+`DifferentiableIntervention(X, x, model::CausalModel, context::Context)`
 # Inputs
 - `X`: name of variable
 - `x`: value to fix `X` to
 - `model`: Causal Model in which to apply intervention
 - `context`
-# Returns - struct Intervention with 
+# Returns - struct DifferentiableIntervention with 
 -`x` denoting values of variables in `model` after applying model to `context`,
 -`β` denoting 0 (not affected by the intervention) 
     or 1 (affected by the intervention) for each value in `x`,
 -`l` denoting cummulative lengths of each variable in the model.  
 """
 function DifferentiableIntervention(X, x::AbstractArray, model::CausalModel, context::Context)
+    # Every variable in the model must take a real ( i.e., not an array) value
     m = apply_context(model, context)
     l = Int64[]
     var = Float64[]  # Array of all values including intervention
