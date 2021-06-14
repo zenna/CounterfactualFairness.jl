@@ -33,25 +33,3 @@ end
 i = Intervention(:SAT, 1560)
 m = apply_intervention(g, i)
 @test typeof(m) == CausalModel{Int64}
-
-# df = DataFrame(CSV.read("C:/Users/Lenovo/Downloads/law_data.csv"))
-# df = df[!, Not(:Column1)]
-# df = df[!, Not(:first_pf)]
-# df = df[!, Not(:region_first)]
-# df = df[!, Not(:sander_index)]
-# v = df[:race]
-# d = Dict(zip(levels(v), collect(1:8)))
-# df[:race] = [ d[name] for name in df[:race]]
-# for name in names(df)
-#         df[!, name] = convert(Array{Float64,1}, df[!,name])
-# end
-# t = df
-# C = Tables.columns(t)
-# sch = Tables.schema(t)
-# n = length(sch)
-# X = reduce(hcat, map(c->Tables.columns(t)[c], names(Tables.columns(t))))
-# N = size(X,1)
-# C = Statistics.cor(X) 
-# p = 0.025
-# p = pcalg(n, gausscitest, (C,N), quantile(Normal(), 1-p/2))
-# plot(p)
