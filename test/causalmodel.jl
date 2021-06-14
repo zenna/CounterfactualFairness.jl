@@ -9,8 +9,8 @@ Y = 4 * X + U₂
 Z = X / 10 + U₃
 g = CausalModel()
 g = add_vertex(g, (:Temp, U₁))
-g = add_vertex(g, (:IceCreamSales, U₂))
-g = add_vertex(g, (:Crime, U₃))
+g = add_vertex(g, (:IceCreamSales, Y))
+g = add_vertex(g, (:Crime, Z))
 
 @test add_edge!(g, 1 => 2)
 @test add_edge!(g, 1 => 3)
