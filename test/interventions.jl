@@ -1,12 +1,12 @@
 using CounterfactualFairness, Test
-using Omega, ForwardDiff
+using Omega, ForwardDiff, Distributions
 
-U₁ = normal(5, 10)
-U₂ = normal(1000, 200)
-U₃ = normal(1, 2)
+U₁ = 1 ~ Normal(5, 10)
+U₂ = 1 ~ Normal(1000, 200)
+U₃ = 1 ~ Normal(1, 2)
 X = U₁
-Y = X / 3 + U₂
-Z = X / 16 + U₃
+Y(ω) = X(ω) / 3 + 10
+Z(ω) = Y(ω) / 16 + 100
 g = CausalModel()
 g = add_vertex(g, (:Fund, X))
 g = add_vertex(g, (:SAT, Y))
@@ -33,3 +33,7 @@ end
 i = Intervention(:SAT, 1560)
 m = apply_intervention(g, i)
 @test typeof(m) == CausalModel{Int64}
+@test indegree(m, 2) == 0
+v = CausalVar(m, :SAT)
+intv = intervene(v, v => 1230)
+randsample(intv)

@@ -4,10 +4,14 @@ authors = ["archanarw <47085068+archanarw@users.noreply.github.com>"]
 version = "0.1.0"
 
 [deps]
+CausalInference = "8e462317-f959-576b-b3c1-403f26cec956"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
 NamedTupleTools = "d9ec5142-1e00-5aa0-9d6a-321866360f50"
 Omega = "1af16e33-887a-59b3-8344-18f1671b3ade"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

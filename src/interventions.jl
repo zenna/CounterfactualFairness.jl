@@ -1,6 +1,8 @@
 using Omega, Random
+import Omega:intervene
 
-export Context, Intervention, DifferentiableIntervention, apply_context, apply_intervention
+export Context, Intervention, DifferentiableIntervention, 
+    apply_context, apply_intervention, intervene, CausalVar
 
 "Maps every exogenous variable to its value"
 struct Context{N <: Real}
@@ -94,7 +96,7 @@ Returns - a vector `v` where each value is a vector that the respected variable 
 function apply_context(model::CausalModel, context::Context, rng::AbstractRNG)
     m = []
     for key in keys(context.c)
-        push!(m, context.c[key]) # Assuming the values in Context are all arrays
+        push!(m, context.c[key])
     end
     for n in 1:nv(model)
         parents = inneighbors(model, n)
@@ -103,10 +105,8 @@ function apply_context(model::CausalModel, context::Context, rng::AbstractRNG)
         if !(isexo)
             v = mechanism(model, n)[:func]
             for p in parents
-                v = replace(v, mechanism(model, p)[:func] => m[p])
-    end
-            v = rand(rng, v)
-            push!(m, v)
+                push!(m, randsample(rng -> intervene(v, mechanism(model, p)[:func] => m[p])(rng)))
+            end
         end
     end
     return m
@@ -116,7 +116,7 @@ apply_context(model::CausalModel, context::Context) =
     apply_context(model, context, Random.GLOBAL_RNG)
 
 """
-'apply_intervention(model::CausalModel, i::Intervention)'
+`apply_intervention(model::CausalModel, i::Intervention)`
 Returns - (vector of) values of each variable in `model` after applying the intervention.
 """
 function apply_intervention(model::CausalModel, i::DifferentiableIntervention, rng::AbstractRNG)
@@ -131,9 +131,9 @@ function apply_intervention(model::CausalModel, i::DifferentiableIntervention, r
         else
             v = mechanism(model, n).func
             for p in parents
-                v = replace(v, mechanism(model, p).func => m[p])
+                v = intervene(v, mechanism(model, p).func => m[p])
             end
-            value = rand(rng, v)
+            value = randsample(rng -> v(rng))
         end
         new_val = value .* i.β[i.l[n]] .+ elts .* (1 - i.β[i.l[n]]) # applying the intervention to the variable
         m = vcat(m, new_val)
@@ -144,23 +144,18 @@ end
 apply_intervention(model::CausalModel, i::DifferentiableIntervention) = 
     apply_intervention(model, i, Random.GLOBAL_RNG)
 
-function apply_intervention(model::CausalModel, i::Intervention)
+function apply_intervention(model, i::Intervention)
     m = CausalModel()
+    var = identity
+    for n in 1:nv(model)
+        if i.X == mechanism(model, n)[:name]
+                var = mechanism(model, n).func
+            break
+        end
+    end
     for n in 1:nv(model)
         v = mechanism(model, n).func
-        if mechanism(model, n)[:name] == i.X
-            m = add_vertex(m, (i.X, replace(v, v => i.x)))
-            continue
-        end
-        parents::Array{Int64,1} = inneighbors(model, n)
-        if length(parents) == 0
-            m = add_vertex(m, (mechanism(model, n)[:name], v))
-            continue
-        end
-        for p in parents
-            v = replace(v, mechanism(model, p).func => mechanism(model, p).func)
-        end
-        m = add_vertex(m, (mechanism(model, n)[:name], v))
+        m = add_vertex(m, (i.X, intervene(v, var => i.x)))
     end
     c = collect(edges(model))
     for e in 1:length(c)
@@ -174,4 +169,50 @@ function apply_intervention(model::CausalModel, i::Intervention)
             return m
         end
     end
+end
+
+struct CausalVar{CausalModel, Symbol}
+    model::CausalModel
+    varname::Symbol
+end
+
+function intervene(x, p::Pair{CausalVar, Y}) where Y
+    var = identity
+    for i in 1:nv(p.first.model)
+        if mechanism(p.first.model, i).name == p.first.varname
+            var = mechanism(p.first.model, i).func
+        end
+    end
+    return intervene(x, var => p.second)
+end
+
+function intervene(v::CausalVar, p::Pair{CausalVar, Y}) where Y
+    var1, var2 = identity, identity
+    for i in 1:nv(p.first.model)
+        if mechanism(p.first.model, i).name == p.first.varname
+            var1 = mechanism(p.first.model, i).func
+        end
+    end
+    for i in 1:nv(v.model)
+        if mechanism(v.model, i).name == v.varname
+            var2 = mechanism(v.model, i).func
+        end
+    end
+    return intervene(var2, var1 => p.second)
+end
+
+function (v::CausalVar)(ω::AbstractΩ)
+    for i in 1:nv(v.model)
+        if mechanism(v.model, i).name == v.varname
+            return mechanism(v.model, i).func(ω)
+        end
+    end
+end
+
+function (g::CausalModel)(ω::AbstractΩ)
+    cm = []
+    for i in 1:nv(g)
+        push!(cm, mechanism(g, i)[:func](ω))
+    end
+    return cm
 end

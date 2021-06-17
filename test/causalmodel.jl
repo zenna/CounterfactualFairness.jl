@@ -1,12 +1,12 @@
 using CounterfactualFairness, Test
-using Omega
+using Omega, Distributions
 
-U₁ = normal(27, 5)
-U₂ = normal(2, 4)
-U₃ = normal(1, 2)
+U₁ = 1 ~ Normal(27, 5)
+U₂ = 1 ~ Normal(2, 4)
+U₃ = 1 ~ Normal(1, 2)
 X = U₁
-Y = 4 * X + U₂
-Z = X / 10 + U₃
+Y(ω) = 4 * X(ω) + U₂
+Z(ω) = X(ω) / 10 + U₃
 g = CausalModel()
 g = add_vertex(g, (:Temp, X))
 g = add_vertex(g, (:IceCreamSales, Y))
