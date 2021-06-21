@@ -171,7 +171,7 @@ function apply_intervention(model, i::Intervention)
     end
 end
 
-struct CausalVar{CausalModel, Symbol}
+struct CausalVar
     model::CausalModel
     varname::Symbol
 end
@@ -181,6 +181,7 @@ function intervene(x, p::Pair{CausalVar, Y}) where Y
     for i in 1:nv(p.first.model)
         if mechanism(p.first.model, i).name == p.first.varname
             var = mechanism(p.first.model, i).func
+            break
         end
     end
     return intervene(x, var => p.second)

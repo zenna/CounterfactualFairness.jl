@@ -21,3 +21,23 @@ add_edge!(m, 2 => 3)
 @test isNonDesc(m, Y′, A) == false
 # Once we remove :x1 from Y′, Y′ passes the sufficiency test 
 @test isNonDesc(m, (:x2, :x3), A) == true
+
+x = 1 ~ Normal(0, 1)
+y(ω) = (1 ~ Normal(x(ω), 0.25))(ω)
+z(ω) = (2 ~ Normal(x(ω), 0.5))(ω)
+w(ω) = y(ω) + z(ω)
+v(ω) = 2 * w(ω)
+
+model = CausalModel()
+model = add_vertex(model, (:x, x))
+model = add_vertex(model, (:y, y))
+model = add_vertex(model, (:z, z))
+model = add_vertex(model, (:w, w))
+model = add_vertex(model, (:v, v))
+add_edge!(model, 1 => 2)
+add_edge!(model, 1 => 3)
+add_edge!(model, 2 => 4)
+add_edge!(model, 3 => 4)
+add_edge!(model, 4 => 5)
+c = ω -> counterfactual(:v, (y = 0.1, z = 0.4), Intervention(:x, 0.0), model, ω)
+@test isapprox(randsample(c), 0.68, atol = 0.001)

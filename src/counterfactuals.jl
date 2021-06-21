@@ -1,7 +1,8 @@
 using Omega, LightGraphs
 
-export isNonDesc
+export isNonDesc, counterfactual
 
+# Level 1:
 """
     `isNonDesc(m::CausalModel, Y::Tuple, A::Tuple)`
 
@@ -32,4 +33,34 @@ function isNonDesc(m::CausalModel, Y::Tuple, A::Tuple)
         end
     end
     return true
+end
+
+# Y is a linear regression of X and A (observable variables)
+# In the paper, the authors have written the following:
+# Y ~ Normal(* linear combination of X and A *, 1)
+"""
+    `counterfactual(Y::Symbol, V::NamedTuple, i::Intervention, model::CausalModel, ω::AbstractΩ)`
+
+# Inputs -
+- Y : Name of the Variable that is being predicted
+- V : NamedTuple of obvservable variables and their values
+- i : Intervention to be performed
+- model : Causal model
+- ω
+
+# Returns the counterfactual P(Yₐ = y | V = v), where Yₐ is the intervened distribution
+"""
+function counterfactual(Y::Symbol, V::NamedTuple, i::Intervention, model::CausalModel, ω::AbstractΩ)
+    Y_ = CausalVar(model, Y)
+    X = CausalVar(model, i.X)
+    intY_ = intervene(Y_, X => i.x)
+    for k in keys(V)
+        for n in 1:nv(model)
+            if mechanism(model, n)[:name] == k
+                cond!(ω, isapprox(mechanism(model, n)[:func](ω), V[k], atol = 0.001))
+                break
+            end
+        end
+    end
+    return intY_(ω)
 end
