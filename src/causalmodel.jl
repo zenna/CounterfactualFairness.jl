@@ -1,17 +1,18 @@
-using LightGraphs, NamedTupleTools
+using LightGraphs, NamedTupleTools, Omega
 
 import LightGraphs:
     AbstractGraph, nv, ne,
     edges, add_edge!, rem_edge!,
     has_edge, inneighbors, outneighbors,
     neighbors, all_neighbors,
-    indegree, outdegree
+    indegree, outdegree, add_vertex!
 
 import LightGraphs.SimpleGraphs: SimpleDiGraph, fadj, badj
 
 import Base.eltype
 
-export CausalModel, add_vertex, mechanism
+export CausalModel, add_vertex, add_vertex!, mechanism, 
+    add_endo_variable!, add_exo_variable!, CausalVar
 
 export nv, ne, edges, add_edge!, rem_edge!, 
     has_edge, inneighbors, outneighbors,
@@ -56,11 +57,75 @@ function add_vertex(g::CausalModel, prop)
     return CausalModel(m, scm)
 end
 
+function add_vertex!(g::CausalModel, prop)
+    t = add_vertex!(g.dag)
+    g.scm[nv(g)] = Variable(prop)
+    return t
+end
+
 add_edge!(g::CausalModel, x...) = add_edge!(g.dag, x...)
 rem_edge!(g::CausalModel, x...) = rem_edge!(g.dag, x...)
 
 indegree(g::CausalModel) = indegree(g.dag)
 outdegree(g::CausalModel) = outdegree(g.dag)
+
+struct CausalVar
+    model::CausalModel
+    varname::Symbol
+end
+
+function (v::CausalVar)(ω::AbstractΩ)
+    for i in 1:nv(v.model)
+        if mechanism(v.model, i).name == v.varname
+            parents = inneighbors(v.model, i)
+            isexo = Bool(length(parents) == 0)
+            func = mechanism(v.model, i)[:func]
+            if !(isexo)
+                p = [CausalVar(v.model, mechanism(v.model, parent).name)(ω) for parent in parents]
+                if length(func) != 1
+                    return func[1](func[2], p...)
+                else
+                    return func[1](p...)
+                end  
+            else
+                return func(ω)
+            end
+        end
+    end
+end
+
+function vertex(c::CausalVar)
+    for n in 1:nv(c.model)
+        if mechanism(c.model, n)[:name] == c.varname
+            return n
+        end
+    end
+    print("The vertex does not exist")
+    throw(error())
+end
+
+function add_exo_variable!(m::CausalModel, name::Symbol, dist)
+    add_vertex!(m, (name, dist))
+    return CausalVar(m, name)
+end
+
+function add_endo_variable!(m::CausalModel, name::Symbol, func, parents::CausalVar...)
+    # var = ω -> func(map(parents, ω)...)
+    add_vertex!(m, (name, (func,)))
+    for p in parents
+        add_edge!(m, vertex(p) => nv(m))
+    end
+    return CausalVar(m, name)
+end
+
+function add_endo_variable!(m::CausalModel, name::Symbol, func, num::Number, parents::CausalVar...)
+    # var = ω -> func(num..., map(parents, ω)...)
+    add_vertex!(m, (name, (func, num)))
+    for p in parents
+        add_edge!(m, vertex(p) => nv(m))
+    end
+    return CausalVar(m, name)
+end
 
 """
     mechanism(g, v)
