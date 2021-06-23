@@ -1,22 +1,18 @@
 using CounterfactualFairness, Test
 using Omega, ForwardDiff, Distributions
 
-U₁ = 1 ~ Normal(5, 10)
-U₂ = 1 ~ Normal(1000, 200)
-U₃ = 1 ~ Normal(1, 2)
-X = U₁
-Y(ω) = X(ω) / 3 + 10
-Z(ω) = Y(ω) / 16 + 100
 g = CausalModel()
-g = add_vertex(g, (:Fund, X))
-g = add_vertex(g, (:SAT, Y))
-g = add_vertex(g, (:ColApp, Z))
+U₁ = add_exo_variable!(g, :U₁, 1 ~ Normal(27, 5))
+U₂ = add_exo_variable!(g, :U₂, 2 ~ Normal(27, 5))
+U₃ = add_exo_variable!(g, :U₃, 3 ~ Normal(27, 5))
+X = add_endo_variable!(g, :X, identity, U₁)
+Ya = add_endo_variable!(g, :Ya, *, 4, X)
+Yb = add_endo_variable!(g, :Yb, +, Ya, U₂)
+Z = add_endo_variable!(g, :Z, /, X, U₃)
 
-add_edge!(g, 1 => 2)
-add_edge!(g, 2 => 3)
-
-context = Context([:Fund], [3])
-i = DifferentiableIntervention(:SAT, 1560, g, context)
+context = Context((U₁ = 1.23, U₂ = 15, U₃ = 1.451))
+output = apply_context(g, context)
+i = DifferentiableIntervention(:X, 15, g, context)
 apply_intervention(g, i)
 
 function loss(xβ)
@@ -30,10 +26,11 @@ function loss(xβ)
 end
 @test typeof(ForwardDiff.gradient(loss, vcat(i.x, i.β))) == Array{Float64,1}
 
-i = Intervention(:SAT, 1560)
+i = Intervention(:X, 15)
 m = apply_intervention(g, i)
 @test typeof(m) == CausalModel{Int64}
-@test indegree(m, 2) == 0
-v = CausalVar(m, :SAT)
-intv = intervene(v, v => 1230)
-randsample(intv)
+@test indegree(m, 4) == 0
+m(ω)
+ω = defω()
+@test CausalVar(m, mechanism(m, 4).name)(ω) != CausalVar(g, mechanism(m, 4).name)(ω)
+@test CausalVar(m, mechanism(m, 7).name)(ω) != CausalVar(g, mechanism(m, 7).name)(ω)
