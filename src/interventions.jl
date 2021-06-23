@@ -176,24 +176,9 @@ function apply_intervention(model, intervention::Intervention)
     end
 end
 
-<<<<<<< HEAD
-struct CausalVar
-    model::CausalModel
-    varname::Symbol
-end
-
-function intervene(x, p::Pair{CausalVar, Y}) where Y
-    var = identity
-    for i in 1:nv(p.first.model)
-        if mechanism(p.first.model, i).name == p.first.varname
-            var = mechanism(p.first.model, i).func
-            break
-        end
-=======
 function intervene(v::CausalVar, intervention::Intervention)
     if v.varname == intervention.X
         return ω -> intervention.x
->>>>>>> arw-week1
     end
     m = v.model
     for i in 1:nv(m)

@@ -53,14 +53,14 @@ end
 function counterfactual(Y::Symbol, V::NamedTuple, i::Intervention, model::CausalModel, ω::AbstractΩ)
     Y_ = CausalVar(model, Y)
     X = CausalVar(model, i.X)
-    intY_ = intervene(Y_, X => i.x)
     for k in keys(V)
         for n in 1:nv(model)
             if mechanism(model, n)[:name] == k
-                cond!(ω, isapprox(mechanism(model, n)[:func](ω), V[k], atol = 0.001))
+                var = CausalVar(model, mechanism(model, n)[:name])
+                cond!(ω, isapprox(var(ω), V[k], atol = 0.001))
                 break
             end
         end
     end
-    return intY_(ω)
+    return intervene(Y_, X => i.x)(ω)
 end
