@@ -164,7 +164,6 @@ apply_intervention(model::CausalModel, i::DifferentiableIntervention) =
 
 function apply_intervention(model, intervention::Intervention)
     m = deepcopy(model)
-    int_X = identity # Initializing for if an endogenous variable is before intervened variable
     for n in 1:nv(model)
         if intervention.X == mechanism(model, n).name
             m.scm[n] = Variable((intervention.X, ω -> intervention.x))
@@ -177,31 +176,10 @@ function apply_intervention(model, intervention::Intervention)
 end
 
 function intervene(v::CausalVar, intervention::Intervention)
-    if v.varname == intervention.X
-        return ω -> intervention.x
-    end
-    m = v.model
-    for i in 1:nv(m)
-        if mechanism(m, i).name == v.varname
-            parents = inneighbors(m, i)
-            isexo = Bool(length(parents) == 0)
-            func = mechanism(m, i)[:func]
-            if !(isexo)
-                p_int = ω -> [intervene(CausalVar(m, mechanism(m, parent).name), intervention)(ω) for parent in parents]
-                if length(func) != 1
-                    return ω -> func[1](func[2], p_int(ω)...)
-                else
-                    return ω -> func[1](p_int(ω)...)
-                end  
-            else
-                return func
-            end
-        end
-    end
-
+    m = apply_intervention(v.model, intervention)
+    return CausalVar(m, v.varname)
 end
 
 function intervene(v::CausalVar, p::Pair{CausalVar, Y}) where Y
-
     return intervene(v, Intervention(p.first.varname, p.second))
 end

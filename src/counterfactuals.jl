@@ -57,7 +57,7 @@ function counterfactual(Y::Symbol, V::NamedTuple, i::Intervention, model::Causal
         for n in 1:nv(model)
             if mechanism(model, n)[:name] == k
                 var = CausalVar(model, mechanism(model, n)[:name])
-                cond!(ω, isapprox(var(ω), V[k], atol = 0.001))
+                cond!(ω, isapprox(var(ω), V[k], atol = 0.01))
                 break
             end
         end
