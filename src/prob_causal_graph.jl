@@ -14,8 +14,8 @@ end
 
 function prob_causal_graph(df; p=0.01, test=gausscitest)
     @show cg = pcalg(df, p, test)
-    if !(any(adjacency_matrix(cg, dir=:in) .== adjacency_matrix(cg, dir=:out)))
-        print("There are undirected edges in the graph")
+    if any(Bool.(Matrix(adjacency_matrix(cg, dir=:in)) .& Matrix(adjacency_matrix(cg, dir=:out))))
+        println("There are undirected edges in the graph, the graph is: ", cg)
         throw(error())
     end
     cm = CausalModel()
@@ -29,16 +29,19 @@ function prob_causal_graph(df; p=0.01, test=gausscitest)
         else
             B = [node]
             A = inneighbors(cg, node)
-            a, b, c = emperical_mechanism((μ, Σ), A, B)
+            a, b, c = empirical_mechanism((μ = μ, Σ = Σ), A, B)
             pa = []
+            pc = []
             for i in 1:length(a)
                 par = CausalVar(cm, mechanism(cm, i).name)
-                pa[i] = add_endo_variable!(cm, Symbol(string(X) * string(i)), *, a[i], par)
-                pc[i] = add_exo_variable!(cm, Symbol("U" * string(i)), id ~ Normal(0, c[i]))
+                ex = add_exo_variable!(cm, Symbol("U" * string(i)), id ~ Normal(0, 1))
+                push!(pc, add_endo_variable!(cm, Symbol("U′" * string(i)), *, c[i], ex))
+                push!(pa, add_endo_variable!(cm, Symbol(string(X) * string(i)), *, a[i], par))
                 id = id + 1
             end
             add_endo_variable!(cm, Symbol(X), +, sum(b), vcat(pa, pc)...)
         end
+        node = node + 1
     end
     return cm
 end
