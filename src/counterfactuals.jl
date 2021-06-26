@@ -1,4 +1,5 @@
 using Omega, LightGraphs
+import Omega: Interventions, intervene
 
 export isNonDesc, counterfactual
 

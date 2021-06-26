@@ -26,7 +26,7 @@ function loss(xβ)
 end
 @test typeof(ForwardDiff.gradient(loss, vcat(i.x, i.β))) == Array{Float64,1}
 
-i = Intervention(:X, 15)
+i = CounterfactualFairness.Intervention(:X, 15)
 m = apply_intervention(g, i)
 @test typeof(m) == CausalModel{Int64}
 @test indegree(m, 4) == 0

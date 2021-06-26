@@ -1,5 +1,5 @@
 using Omega, Random
-import Omega:intervene
+import Omega:intervene, Interventions
 
 export Context, Intervention, DifferentiableIntervention, 
     apply_context, apply_intervention, intervene

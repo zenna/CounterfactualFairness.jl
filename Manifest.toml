@@ -505,7 +505,7 @@ uuid = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
 version = "0.4.9"
 
 [[Omega]]
-deps = ["OmegaCore", "Reexport"]
+deps = ["OmegaCore", "Reexport", "SoftPredicates"]
 git-tree-sha1 = "e258283706433fcf874c4df6931dd9c8890614d9"
 repo-rev = "lang"
 repo-url = "https://github.com/zenna/Omega.jl"
@@ -513,7 +513,7 @@ uuid = "1af16e33-887a-59b3-8344-18f1671b3ade"
 version = "0.2.0"
 
 [[OmegaCore]]
-deps = ["Future", "Random", "Reexport", "Spec"]
+deps = ["Future", "Random", "Reexport", "Spec", "Distributions"]
 git-tree-sha1 = "da62fbc3ac53ef5257d3937e9d25a394d65ef7da"
 repo-rev = "lang:OmegaCore"
 repo-url = "https://github.com/zenna/Omega.jl"
