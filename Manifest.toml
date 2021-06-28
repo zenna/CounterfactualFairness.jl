@@ -320,9 +320,9 @@ version = "1.0.0"
 
 [[JLD2]]
 deps = ["DataStructures", "FileIO", "MacroTools", "Mmap", "Pkg", "Printf", "Reexport", "TranscodingStreams", "UUIDs"]
-git-tree-sha1 = "a605ca7aac73ccbba3208c49ca4d5eb78c8f4c74"
+git-tree-sha1 = "4813826871754cf52607e76ad37acb36ccf52719"
 uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-version = "0.4.10"
+version = "0.4.11"
 
 [[JLLWrappers]]
 deps = ["Preferences"]
@@ -505,19 +505,27 @@ uuid = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
 version = "0.4.9"
 
 [[Omega]]
-deps = ["OmegaCore", "Reexport", "SoftPredicates"]
-git-tree-sha1 = "e258283706433fcf874c4df6931dd9c8890614d9"
+deps = ["Distributions", "InferenceBase", "OmegaCore", "OmegaMH", "Reexport", "SoftPredicates"]
+git-tree-sha1 = "5ceccb3de51cd138ebc5d9d510e028ba1c7f9bff"
 repo-rev = "lang"
 repo-url = "https://github.com/zenna/Omega.jl"
 uuid = "1af16e33-887a-59b3-8344-18f1671b3ade"
 version = "0.2.0"
 
 [[OmegaCore]]
-deps = ["Future", "Random", "Reexport", "Spec", "Distributions"]
-git-tree-sha1 = "da62fbc3ac53ef5257d3937e9d25a394d65ef7da"
+deps = ["Future", "Random", "Reexport", "Spec"]
+git-tree-sha1 = "cd7177f9ec77ccb1d5a0c595aaaa2360b891a37d"
 repo-rev = "lang:OmegaCore"
 repo-url = "https://github.com/zenna/Omega.jl"
 uuid = "84d23798-d00f-4e9b-a82e-be69778c030a"
+version = "0.1.0"
+
+[[OmegaMH]]
+deps = ["InferenceBase", "OmegaCore"]
+git-tree-sha1 = "793cedf4c087203de04b4d6e7994907fc633cca8"
+repo-rev = "lang:OmegaMH"
+repo-url = "https://github.com/zenna/Omega.jl"
+uuid = "89eb2d39-e1f3-436d-870a-9a4679d6d79e"
 version = "0.1.0"
 
 [[OpenJpeg_jll]]
@@ -655,7 +663,7 @@ uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[SoftPredicates]]
 deps = ["Cassette", "DocStringExtensions", "InferenceBase", "LinearAlgebra", "Spec"]
-git-tree-sha1 = "d6c6c2c0644293e23ba9502e60145ebaf4f92ac8"
+git-tree-sha1 = "fadd5d8fc2eefa05f0a90bba91b84c030c235579"
 repo-rev = "lang:SoftPredicates"
 repo-url = "https://github.com/zenna/Omega.jl"
 uuid = "5345b20a-9614-40c4-b281-8f4998fc0f3b"
@@ -750,9 +758,9 @@ version = "3.3.3"
 
 [[TimerOutputs]]
 deps = ["ExprTools", "Printf"]
-git-tree-sha1 = "bf8aacc899a1bd16522d0350e1e2310510d77236"
+git-tree-sha1 = "9f494bc54b4c31404a9eff449235836615929de1"
 uuid = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
-version = "0.5.9"
+version = "0.5.10"
 
 [[TranscodingStreams]]
 deps = ["Random", "Test"]
