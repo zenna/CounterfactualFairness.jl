@@ -12,8 +12,7 @@ function empirical_mechanism(P, A, B)
     (; a=Z, b=P.μ[A] + Z * ( - P.μ[B]), c=P.Σ[A,A] - Z * P.Σ[B,A])
 end
 
-function prob_causal_graph(df; p=0.01, test=gausscitest)
-    @show cg = pcalg(df, p, test)
+function prob_causal_graph(df, cg; p=0.01, test=gausscitest)
     if any(Bool.(Matrix(adjacency_matrix(cg, dir=:in)) .& Matrix(adjacency_matrix(cg, dir=:out))))
         println("There are undirected edges in the graph, the graph is: ", cg)
         throw(error())
@@ -33,7 +32,7 @@ function prob_causal_graph(df; p=0.01, test=gausscitest)
             pa = []
             pc = []
             for i in 1:length(a)
-                par = CausalVar(cm, mechanism(cm, i).name)
+                par = CausalVar(cm, variable(cm, i).name)
                 ex = add_exo_variable!(cm, Symbol("U" * string(i)), id ~ Normal(0, 1))
                 push!(pc, add_endo_variable!(cm, Symbol("U′" * string(i)), *, c[i], ex))
                 push!(pa, add_endo_variable!(cm, Symbol(string(X) * string(i)), *, a[i], par))
@@ -45,3 +44,6 @@ function prob_causal_graph(df; p=0.01, test=gausscitest)
     end
     return cm
 end
+
+prob_causal_graph(df; p = 0.01, test = gausscitest) =
+    prob_causal_graph(df, pcalg(df, p, test))
