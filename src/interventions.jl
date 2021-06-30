@@ -53,7 +53,7 @@ function DifferentiableIntervention(X, x::AbstractArray, model::CausalModel, con
     var = Float64[]  # Array of all values including intervention
     for n in 1:length(m)
         l = vcat(l, length(m[n]))
-        var::Array{Float64,1} = (mechanism(model, n).name == X) ? vcat(var, x) : vcat(var, m[n])
+        var::Array{Float64,1} = (variable(model, n).name == X) ? vcat(var, x) : vcat(var, m[n])
     end
     b = Int64[]   # the mask
     int = 0   # to identify the vertex that is being intervened
@@ -62,7 +62,7 @@ function DifferentiableIntervention(X, x::AbstractArray, model::CausalModel, con
         val = Bool[b[l] for l in p]
         # s is true is any of the parent vetices have the value 1 in the mask
         s::Bool = (length(val) == 0) ? false : |(val...)
-        if (mechanism(model, n).name == X)
+        if (variable(model, n).name == X)
             b = vcat(b, 1)
             int = n
         elseif (s == 1)
@@ -106,7 +106,7 @@ function apply_context(model::CausalModel, context::Context)
         isexo = Bool(length(parents) == 0)
         if !(isexo)
             p = [m[parent] for parent in parents] # p contains values of parent variables
-            v = mechanism(model, n)[:func]
+            v = variable(model, n).func
             if length(v) != 1
                 push!(m, v[1](v[2], p...))
             else
@@ -119,14 +119,6 @@ end
 
 apply_context(m::CausalModel, c::NamedTuple) = apply_context(m, Context(c))
 
-function (g::CausalModel)(ω::AbstractΩ)
-    cm = Float64[]
-    for i in 1:nv(g)
-        push!(cm, CausalVar(g, mechanism(g, i)[:name])(ω))
-    end
-    return cm
-end
-
 """
     `apply_intervention(model::CausalModel, i::DifferentiableIntervention)`
 
@@ -136,7 +128,7 @@ end
 
 Returns the interevened causal model `modelᵢ`
 """
-function apply_intervention(model::CausalModel, i::DifferentiableIntervention, ω::AbstractΩ)
+function apply_intervention(model::CausalModel, i::DifferentiableIntervention)
     m = []
     for n in 1:nv(model)
         parents::Array{Int64,1} = inneighbors(model, n)
@@ -146,9 +138,9 @@ function apply_intervention(model::CausalModel, i::DifferentiableIntervention, �
         if isexo
             value = elts
         else
-            v = CausalVar(model, mechanism(model, n).name)
+            v = CausalVar(model, variable(model, n).name)
             for parent in parents
-                p_ = CausalVar(model, mechanism(model, parent).name)
+                p_ = CausalVar(model, variable(model, parent).name)
                 v = intervene(v, p_ => m[parent])
             end
             value = randsample(ω -> v(ω))
@@ -159,13 +151,10 @@ function apply_intervention(model::CausalModel, i::DifferentiableIntervention, �
     return m
 end
 
-apply_intervention(model::CausalModel, i::DifferentiableIntervention) = 
-    apply_intervention(model, i, defω())
-
 function apply_intervention(model, intervention::Intervention)
     m = deepcopy(model)
     for n in 1:nv(model)
-        if intervention.X == mechanism(model, n).name
+        if intervention.X == variable(model, n).name
             m.scm[n] = Variable((intervention.X, ω -> intervention.x))
             for p in inneighbors(m, n)
                 rem_edge!(m, p, n)
@@ -174,6 +163,8 @@ function apply_intervention(model, intervention::Intervention)
         end
     end
 end
+apply_intervention(g::CausalModel, p::Pair{CausalVar, Y}) where Y = 
+    apply_intervention(g, Intervention(p.first.varname, p.second))
 
 function intervene(v::CausalVar, intervention::Intervention)
     m = apply_intervention(v.model, intervention)

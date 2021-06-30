@@ -24,9 +24,9 @@ function isNonDesc(m::CausalModel, Y::Tuple, A::Tuple)
     end
     for n in 1:nv(m)
         for a in A
-            if mechanism(m, n).name == a
+            if variable(m, n).name == a
                 for d in outneighbors(m, n)
-                    if mechanism(m, d).name ∈ Y
+                    if variable(m, d).name ∈ Y
                         return false
                     end
                 end
@@ -56,8 +56,8 @@ function counterfactual(Y::Symbol, V::NamedTuple, i::Intervention, model::Causal
     X = CausalVar(model, i.X)
     for k in keys(V)
         for n in 1:nv(model)
-            if mechanism(model, n)[:name] == k
-                var = CausalVar(model, mechanism(model, n)[:name])
+            if variable(model, n)[:name] == k
+                var = CausalVar(model, variable(model, n)[:name])
                 cond!(ω, isapprox(var(ω), V[k], atol = 0.01))
                 break
             end
