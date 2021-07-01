@@ -10,7 +10,7 @@ Ya = add_endo_variable!(g, :Ya, *, 4, X)
 Yb = add_endo_variable!(g, :Yb, +, 20, Ya)
 Z = add_endo_variable!(g, :Z, *,1/3, Yb)
 
-blocked_edges = [false, false, true, true, true]
+blocked_edges = BlockedEdges([Edge(3 => 4)])
 x₁ = CounterfactualFairness.Intervention(:X, 15)
 x₂ = CounterfactualFairness.Intervention(:X, 20)
 @test all(isapprox.(randsample(apply_ps_intervention(g, x₁, blocked_edges, x₂))[2:end], [15.0, 80.0, 100.0, 100/3], atol = 0.0001))
@@ -18,7 +18,7 @@ x₂ = CounterfactualFairness.Intervention(:X, 20)
 ctx = Context((U₁ = 25, ))
 x₁ = DifferentiableIntervention(:X, 15, g, ctx)
 x₂ = DifferentiableIntervention(:X, 20, g, ctx)
-@test all(isapprox.(randsample(ω -> apply_ps_intervention(g, x₁, blocked_edges, x₂, ω))[2:end], [15.0, 80.0, 100.0, 100/3], atol = 0.001))
+@test all(isapprox.(randsample(ω -> apply_ps_intervention(g, x₁, blocked_edges, x₂)), [25.0, 15.0, 80.0, 100.0, 100/3], atol = 0.001))
 
 function loss(xβ)
     n = length(xβ)

@@ -793,9 +793,9 @@ version = "3.3.3"
 
 [[TimerOutputs]]
 deps = ["ExprTools", "Printf"]
-git-tree-sha1 = "9f494bc54b4c31404a9eff449235836615929de1"
+git-tree-sha1 = "7ba978307a5d40c95c3247b7256f9e9807cab025"
 uuid = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
-version = "0.5.10"
+version = "0.5.11"
 
 [[TranscodingStreams]]
 deps = ["Random", "Test"]
