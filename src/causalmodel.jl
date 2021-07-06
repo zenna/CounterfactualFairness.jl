@@ -59,14 +59,14 @@ outdegree(g::CausalModel) = outdegree(g.dag)
 """
 Defines the variable `varname` in the model
 """
-struct CausalVar
-    model::CausalModel
+struct CausalVar{T}
+    model::CausalModel{T}
     varname::Symbol
 end
 
 function (v::CausalVar)(ω::AbstractΩ)
     # @show topological_order = topological_sort_by_dfs(v.model.dag)
-    cm = []
+    cm::Array{Float64, 1} = []
     for i in 1:nv(v.model)
         # parents = map(p -> getindex(topological_order, p), inneighbors(v.model, i))
         parents = inneighbors(v.model, i)
@@ -86,6 +86,7 @@ function (v::CausalVar)(ω::AbstractΩ)
             return cm[i]
         end
     end
+    throw(error("The variable does not exist in the model"))
 end
 
 function vertex(c::CausalVar)
@@ -99,7 +100,7 @@ end
 
 function (g::CausalModel)(ω::AbstractΩ)
     # order = topological_sort_by_dfs(g.dag)
-    cm = Float64[]
+    cm::Array{Float64, 1} = Float64[]
     for i in 1:nv(g)
         # parents = map(p -> getindex(order, p), inneighbors(g, i))
         parents = inneighbors(g, i)

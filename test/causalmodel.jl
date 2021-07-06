@@ -10,7 +10,7 @@ Ya = add_endo_variable!(g, :Ya, *, 4, X)
 Yb = add_endo_variable!(g, :Yb, +, Ya, U₂)
 Z = add_endo_variable!(g, :Z, /, X, U₃)
 
-@test typeof(X) == CausalVar
+@test typeof(X) == CausalVar{Int64}
 output = apply_context(g, (U₁ = 1.23, U₂ = 15, U₃ = 1.451))
 
 ω = defω()

@@ -129,7 +129,7 @@ apply_context(m::CausalModel, c::NamedTuple) = apply_context(m, Context(c))
 Returns the interevened causal model `modelᵢ`
 """
 function apply_intervention(model::CausalModel, i::DifferentiableIntervention)
-    m = []
+    m::Array{Float64, 1} = []
     for n in 1:nv(model)
         parents::Array{Int64,1} = inneighbors(model, n)
         p = [m[p] for p in parents]
@@ -162,6 +162,7 @@ function apply_intervention(model, intervention::Intervention)
             return m
         end
     end
+    return m
 end
 apply_intervention(g::CausalModel, p::Pair{CausalVar, Y}) where Y = 
     apply_intervention(g, Intervention(p.first.varname, p.second))
@@ -171,6 +172,6 @@ function intervene(v::CausalVar, intervention::Intervention)
     return CausalVar(m, v.varname)
 end
 
-function intervene(v::CausalVar, p::Pair{CausalVar, Y}) where Y
+function intervene(v::CausalVar, p::Pair{CausalVar{T}, Y}) where T where Y
     return intervene(v, Intervention(p.first.varname, p.second))
 end

@@ -5,8 +5,8 @@ import Omega:intervene, Interventions
 
 export apply_ps_intervention, BlockedEdges
 
-struct BlockedEdges
-    edges::Vector{Edge}
+struct BlockedEdges{T}
+    edges::Vector{Edge{T}}
 end
 
 function (B::BlockedEdges)(g::CausalModel)
