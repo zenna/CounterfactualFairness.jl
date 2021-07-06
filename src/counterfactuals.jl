@@ -26,7 +26,11 @@ function isNonDesc(m::CausalModel, Y::Tuple, A::Tuple)
         for a in A
             if variable(m, n).name == a
                 for d in outneighbors(m, n)
-                    if variable(m, d).name ∈ Y
+                    des = variable(m, d).name
+                    if des ∈ Y
+                        return false
+                    end
+                    if !(isNonDesc(m, filter(m -> m ∉ (des, ), Y), (des, )))
                         return false
                     end
                 end

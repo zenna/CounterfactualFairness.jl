@@ -1,3 +1,4 @@
+using Distributions: include
 using CounterfactualFairness, Test
 
 @testset "Causal Model" begin
@@ -14,4 +15,12 @@ end
 
 @testset "Path Specific Effects" begin
     include("ps.jl")
+end
+
+@testset "Gaussian Causal Graph" begin
+    include("graph.jl")
+end
+
+@testset "FairLearning" begin
+    include("fl.jl")
 end
