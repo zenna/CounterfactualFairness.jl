@@ -1,8 +1,9 @@
 using CounterfactualFairness, Test, Distributions
 using DataFrames, CSV
 
-df = CSV.read("adult_binary.csv", DataFrame)
-df[!, 1] = Float64.(df[!, :])
+path = joinpath(pwd(), "data", "adult_binary.csv")
+df = CSV.read(path, DataFrame)
+df[!, :] = Float64.(df[!, :])
 adult = prob_causal_graph(df)
 
 @test typeof(adult) == CausalModel{Int64}

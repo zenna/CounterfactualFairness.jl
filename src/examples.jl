@@ -40,7 +40,8 @@ The dataset used is from [here](https://github.com/yongkaiwu/Counterfactual-Fair
 """
 macro load_adult()
     quote
-        df = CSV.read("adult_binary.csv", DataFrame)
+        path = joinpath(pwd(), "data", "adult_binary.csv")
+        df = CSV.read(path, DataFrame)
         df = float.(df[!, :])
         adult = prob_causal_graph(df)
         adult
