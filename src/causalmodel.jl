@@ -1,4 +1,4 @@
-using LightGraphs, NamedTupleTools, Omega
+using LightGraphs, NamedTupleTools, Omega, Distributions
 
 import LightGraphs:
     AbstractGraph, nv, ne,
@@ -66,7 +66,7 @@ end
 
 function (v::CausalVar)(ω::AbstractΩ)
     # @show topological_order = topological_sort_by_dfs(v.model.dag)
-    cm::Array{Float64, 1} = []
+    cm = []
     for i in 1:nv(v.model)
         # parents = map(p -> getindex(topological_order, p), inneighbors(v.model, i))
         parents = inneighbors(v.model, i)
@@ -77,8 +77,12 @@ function (v::CausalVar)(ω::AbstractΩ)
             if length(func) != 1
                 cm = vcat(cm, func[1](func[2], p...))
             else
-                cm = vcat(cm, func[1](p...))
-            end  
+                if typeof(func[1](p...)) <: Member{T, Int64} where T
+                    cm = vcat(cm, func[1](p...)(ω))
+                else
+                    cm = vcat(cm, func[1](p...))
+                end
+            end
         else
             cm = vcat(cm, func(ω))
         end
@@ -111,7 +115,11 @@ function (g::CausalModel)(ω::AbstractΩ)
             if length(func) != 1
                 cm = vcat(cm, func[1](func[2], p...))
             else
-                cm = vcat(cm, func[1](p...))
+                if (typeof(func[1](p...)) <: Member{T, Int64} where T)
+                    cm = vcat(cm, func[1](p...)(ω))
+                else
+                    cm = vcat(cm, func[1](p...))
+                end
             end  
         else
             cm = vcat(cm, func(ω))
@@ -134,7 +142,7 @@ function add_endo_variable!(m::CausalModel, name::Symbol, func, parents::CausalV
     return CausalVar(m, name)
 end
 
-function add_endo_variable!(m::CausalModel, name::Symbol, func, num::Number, parents::CausalVar...)
+function add_endo_variable!(m::CausalModel, name::Symbol, func, num::Union{Number, AbstractΩ}, parents::CausalVar...)
     # var = ω -> func(num..., map(parents, ω)...)
     add_vertex!(m, (name, (func, num)))
     for p in parents
