@@ -11,9 +11,11 @@ Yb = add_endo_variable!(g, :Yb, +, Ya, U₂)
 Z = add_endo_variable!(g, :Z, /, X, U₃)
 
 @test typeof(X) == CausalVar{Int64}
+@inferred apply_context(g, (U₁ = 1.23, U₂ = 15, U₃ = 1.451))
 output = apply_context(g, (U₁ = 1.23, U₂ = 15, U₃ = 1.451))
 
 ω = defω()
+@inferred g(ω)
 output2 = g(ω)
 @test typeof(output) == typeof(output2)
 

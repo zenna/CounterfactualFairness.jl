@@ -23,7 +23,7 @@ export nv, ne, edges, rem_edge!,
 # Corresponds to structural equations of the form :name = func(...),
 # where in endogenous variables func is applied to parent variables
 # and in exogenous variables func is applied to context/ω
-const Variable = @NamedTuple{name::Symbol, func}
+const Variable = @NamedTuple{name::Symbol, func::Union{Tuple{Function}, Tuple{Function, <:Real}, Member{<:Distribution, Int64}}}
 
 "Causal model with `dag` representing the model and `scm` holds the name of the variables and the SCM"
 struct CausalModel{T} <: AbstractGraph{T}
