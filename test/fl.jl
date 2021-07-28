@@ -4,35 +4,35 @@ using DataFrames, CSV
 using Distances, Base.Threads
 using Bijectors
 
-df = CSV.read("law_data.csv", DataFrame)
-df = df[!, [2, 3, 4, 5, 7]]
-df[!, :race] = [(df[i, :race] == "White") ? 1 : 2 for i in 1:length(df[!, :race])]
+# df = CSV.read("law_data.csv", DataFrame)
+# df = df[!, [2, 3, 4, 5, 7]]
+# df[!, :race] = [(df[i, :race] == "White") ? 1 : 2 for i in 1:length(df[!, :race])]
 
-decision_model = Dense(1, 1)
-params = Flux.params(decision_model)
+# decision_model = Dense(1, 1)
+# params = Flux.params(decision_model)
 
-model = CausalModel()
-R = add_exo_variable!(model, :race, 1 ~ Bernoulli(0.75))
-S = add_exo_variable!(model, :sex, 2 ~ Bernoulli(0.5))
-K = add_exo_variable!(model, :K, 3 ~ Normal(0, 1))
+# model = CausalModel()
+# R = add_exo_variable!(model, :race, 1 ~ Bernoulli(0.75))
+# S = add_exo_variable!(model, :sex, 2 ~ Bernoulli(0.5))
+# K = add_exo_variable!(model, :K, 3 ~ Normal(0, 1))
 
-R1 = add_endo_variable!(model, :R1, *, 4.0, R)
-S1 = add_endo_variable!(model, :S1, *, 1.5, S)
-R2 = add_endo_variable!(model, :R2, *, 6.0, R)
-S2 = add_endo_variable!(model, :S3, *, 0.5, S)
-R3 = add_endo_variable!(model, :R3, *, 6.0, R)
-S3 = add_endo_variable!(model, :S3, *,  0.5, S)
+# R1 = add_endo_variable!(model, :R1, *, 4.0, R)
+# S1 = add_endo_variable!(model, :S1, *, 1.5, S)
+# R2 = add_endo_variable!(model, :R2, *, 6.0, R)
+# S2 = add_endo_variable!(model, :S3, *, 0.5, S)
+# R3 = add_endo_variable!(model, :R3, *, 6.0, R)
+# S3 = add_endo_variable!(model, :S3, *,  0.5, S)
 
-GPA = add_endo_variable!(model, :UGPA, +, K, R1, S1)
-# GPA = add_endo_variable!(model, :GPA, θ -> 4 ~ Normal(θ, 0.1), GPA1)
-LSAT = add_endo_variable!(model, :LSAT, +, K, R2, S2)
-# LSAT = add_endo_variable!(model, :LSAT, θ -> 5 ~ Normal(θ, 0.1), LSAT1)
-# FYA = add_endo_variable!(model, :FYA, decision_model, K)
+# GPA = add_endo_variable!(model, :UGPA, +, K, R1, S1)
+# # GPA = add_endo_variable!(model, :GPA, θ -> 4 ~ Normal(θ, 0.1), GPA1)
+# LSAT = add_endo_variable!(model, :LSAT, +, K, R2, S2)
+# # LSAT = add_endo_variable!(model, :LSAT, θ -> 5 ~ Normal(θ, 0.1), LSAT1)
+# # FYA = add_endo_variable!(model, :FYA, decision_model, K)
 
-loss(x, y) = Flux.Losses.mae(decision_model(x), y)
-opt = Flux.Descent(0.01)
+# loss(x, y) = Flux.Losses.mae(decision_model(x), y)
+# opt = Flux.Descent(0.01)
 
-FairLearning!(df, model, :ZFYA, (:race, :sex), (:K, ), loss, opt, params, defω())
+# FairLearning!(df, model, :ZFYA, (:race, :sex), (:K, ), loss, opt, params, defω())
 
 ############################################################################
 
