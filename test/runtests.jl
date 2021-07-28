@@ -1,4 +1,3 @@
-using Distributions: include
 using CounterfactualFairness, Test
 
 @testset "Causal Model" begin
