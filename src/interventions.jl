@@ -96,10 +96,10 @@ eltype(i::Intervention) = eltype(i.x)
 
 Returns vector of values the variables in the model take when applied to the context.
 """
-function apply_context(model::CausalModel, context::Context)
-    m = Float64[]
+function apply_context(model::CausalModel, context::Context, ω::AbstractΩ)
+    m = eltype(context)[]
     for key in keys(context.c)
-        push!(m, context.c[key])
+        m = vcat(m, context.c[key])
     end
     for n in 1:nv(model)
         parents = inneighbors(model, n)
@@ -108,14 +108,20 @@ function apply_context(model::CausalModel, context::Context)
             p = [m[parent] for parent in parents] # p contains values of parent variables
             v = variable(model, n).func
             if length(v) != 1
-                push!(m, v[1](v[2], p...))
+                m = vcat(m, v[1](v[2], p...))
             else
-                push!(m, v[1](p...))
+                if typeof(v[1](p...)) <: Member{T, Int64} where T
+                    m = vcat(m, v[1](p...)(ω))
+                else
+                    m = vcat(m, v[1](p...))
+                end
             end
         end
     end
     return m
 end
+
+apply_context(m::CausalModel, c::Context) = apply_context(m, c, defω())
 
 apply_context(m::CausalModel, c::NamedTuple) = apply_context(m, Context(c))
 
