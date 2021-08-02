@@ -1,4 +1,4 @@
-using LightGraphs, NamedTupleTools, Omega, Distributions
+using LightGraphs, NamedTupleTools, Omega, Distributions, Base.Threads
 
 import LightGraphs:
     AbstractGraph, nv, ne,
@@ -23,7 +23,7 @@ export nv, ne, edges, rem_edge!,
 # Corresponds to structural equations of the form :name = func(...),
 # where in endogenous variables func is applied to parent variables
 # and in exogenous variables func is applied to context/ω
-const Variable = @NamedTuple{name::Symbol, func::Union{Tuple{Function}, Tuple{Function, <:Real}, Member{<:Distribution, Int64}}}
+const Variable = @NamedTuple{name::Symbol, func::Union{Tuple{Core.Function}, Tuple{Core.Function, <:Real}, Member{<:Sampleable, Int64}}}
 
 "Causal model with `dag` representing the model and `scm` holds the name of the variables and the SCM"
 struct CausalModel{T} <: AbstractGraph{T}
@@ -66,63 +66,61 @@ end
 
 function (v::CausalVar)(ω::AbstractΩ)
     # @show topological_order = topological_sort_by_dfs(v.model.dag)
-    cm = []
+    cm = Float64[]
     for i in 1:nv(v.model)
         # parents = map(p -> getindex(topological_order, p), inneighbors(v.model, i))
         parents = inneighbors(v.model, i)
-        isexo = Bool(length(parents) == 0)
         func = variable(v.model, i).func
-        if !(isexo)
-            p = [cm[parent] for parent in parents]
+        isexo = Bool(length(parents) == 0) # To check if the variable is exogenous (or endogenous)
+        if !isexo
             if length(func) != 1
-                cm = vcat(cm, func[1](func[2], p...))
+                cm = [cm; (func[1]::Function)(func[2], cm[parents]...)]
             else
-                if typeof(func[1](p...)) <: Member{T, Int64} where T
-                    cm = vcat(cm, func[1](p...)(ω))
+                if isa(func[1](cm[parents]...), Member)
+                    cm = [cm; func[1](cm[parents]...)(ω)]
                 else
-                    cm = vcat(cm, func[1](p...))
+                    cm = [cm; func[1](cm[parents]...)]
                 end
             end
         else
-            cm = vcat(cm, func(ω))
+            cm::Vector{Float64} = [cm; func(ω)]
         end
         if variable(v.model, i).name == v.varname
             return cm[i]
         end
     end
-    throw(error("The variable does not exist in the model"))
+    error("The variable does not exist in the model")
 end
 
 function vertex(c::CausalVar)
     for n in 1:nv(c.model)
-        if variable(c.model, n)[:name] == c.varname
+        if variable(c.model, n).name == c.varname
             return n
         end
     end
-    throw(error("The vertex does not exist"))
+    error("The vertex does not exist")
 end
 
 function (g::CausalModel)(ω::AbstractΩ)
     # order = topological_sort_by_dfs(g.dag)
-    cm::Array{Float64, 1} = Float64[]
+    cm = Float64[]
     for i in 1:nv(g)
         # parents = map(p -> getindex(order, p), inneighbors(g, i))
         parents = inneighbors(g, i)
         isexo = Bool(length(parents) == 0)
         func = variable(g, i).func
         if !(isexo)
-            p = [cm[parent] for parent in parents]
             if length(func) != 1
-                cm = vcat(cm, func[1](func[2], p...))
+                cm = [cm; (func[1]::Function)(func[2], cm[parents]...)]
             else
-                if (typeof(func[1](p...)) <: Member{T, Int64} where T)
-                    cm = vcat(cm, func[1](p...)(ω))
+                if isa(func[1](cm[parents]...), Member)
+                    cm = [cm; func[1](cm[parents]...)(ω)]
                 else
-                    cm = vcat(cm, func[1](p...))
+                    cm = [cm; (func[1]::Function)(cm[parents]...)]
                 end
             end  
         else
-            cm = vcat(cm, func(ω))
+            cm::Vector{Float64} = [cm; func(ω)]
         end
     end
     return cm

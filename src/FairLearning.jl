@@ -1,10 +1,10 @@
 using Omega, Flux, DataFrames, Distances
-using Bijectors
+using NamedTupleTools
 using Flux: @adjoint
 ignore(f) = f()
 @adjoint ignore(f) = f(), _ -> nothing
 
-export FairLearning!, train!, cond_latent_var
+export FairLearning!, train!, cond_latent_var, ℒ, P
 
 # Assuming Y, the node to be predicted, is in the model as Normal(decision model, 1)
 function FairLearning!(df, model::CausalModel, Y, sensitive::Tuple, prior::Tuple, loss, opt, ps, ω)    
@@ -41,71 +41,70 @@ function FairLearning!(df, model::CausalModel, Y, sensitive::Tuple, prior::Tuple
 end
 
 
-# Crrently dependent on data in fl.jl (2nd part)
-function cond_latent_var(U::Tuple, X::Dict{<:CausalVar, <:Real}, S::CausalVar, s, ω)
+function cond_latent_var(U::Tuple, X::Vector{Pair{CausalVar{Int64}, Float64}}, S::CausalVar, s::Real, ω::AbstractΩ)
     ret = Float64[]
     for u in U
         om = ω
         temp = u(om)
-        for x in keys(X)
-            cond!(om, isapprox(x(om), X[x], atol = 0.01))
+        for x in X
+            cond!(om, isapprox(x.first(om), x.second, atol = 0.01))
         end
-        cond!(om, isapprox( S(om), s, atol = 0.01))
-        ret = vcat(ret, temp)
+        cond!(om, isapprox(S(om), s, atol = 0.01))
+        ret::Vector{Float64} = [ret; temp]
     end
     return ret
 end
 
-function train!(df, cm, A, U, c, pred, adv, ω, λ, l, opt)
-    df_x, df_y, df_a = Vector.(eachrow(df[!, Not([:Y, :A])])), df[!, :Y], df[!, :A]
-    df_d = Dict{CausalVar{Int64}, Real}[]
-    for i in 1:length(df_x)
-        d = Dict{CausalVar{Int64}, Real}()
-        for k in 1:length(df_x[1]) d[c[k]] = df_x[i][k] end
-        push!(df_d, d)
-    end
-        
-    # function P(u, ω)
-    #   μ, σ = adv(u)
-    #   v = (1 ~ Normal(μ, σ^2))(ω)
-    #   Flux.sigmoid(v)
-    # end
-    function P(u)
-        μ, σ = adv(u)
-        rand(LogitNormal(μ, exp(σ)))
-    end
+function P(u, ω, adv)
+    μ, σ = adv(u)
+    v = (1 ~ Normal(μ, σ^2))(ω)
+    Flux.sigmoid(v)
+end
 
-    function loss(x, y, a, d)
-        ans = Float64[]
-        for i in 1:100
-            u = cond_latent_var(U, d, A, a, ω)
-            c = ignore() do
-                Context([:U₁, :U₂, :U₃, :U₄, :U₅, :A], vcat(u, a))
-            end
-            x̃ = apply_context(cm, c)[16:19]
-            a′ = P(u)
-            c = ignore() do 
-                Context([:U₁, :U₂, :U₃, :U₄, :U₅, :A], vcat(u, a′)) 
-            end
-            x′ = apply_context(cm, c)[16:19]
-            ans = vcat(ans, msd(pred(x̃), pred(x′)))
+function ℒ(cm::CausalModel, X::Tuple, x, y::Float64, A::CausalVar, a::Float64, U::Tuple, adv, pred, loss, ω::AbstractΩ; λ = 0.1, epochs = 100)
+    ans = Float64[]
+    d = ignore() do
+        X .=> x
+    end
+    u = cond_latent_var(U, d, A, a, ω)
+    exo_names = Symbol[]
+    for n in U
+        exo_names::Vector{Symbol} = [exo_names; n.varname]
+    end
+    exo_names = [exo_names; A.varname]
+    c1 = ignore() do
+        Context(exo_names, vcat(u, a))
+    end
+    for i in 1:epochs
+        ac1 = apply_context(cm, c1, ω)
+        x̃ = ignore() do 
+            collect(values(NamedTupleTools.select(ac1, map(x -> x.varname, X))))
         end
-        return mean(l(pred(x), y)) + λ * mean(ans)
+        a′ = P(u, ω, adv)
+        c = ignore() do 
+            Context(exo_names, vcat(u, a′))
+        end
+        ac2 = apply_context(cm, c, ω)
+        x′ = ignore() do 
+            collect(values(NamedTupleTools.select(ac2, map(x -> x.varname, X))))
+        end
+        ans::Vector{Float64} = [ans; msd(pred(x̃), pred(x′))]
     end
+    return abs(mean(loss(pred(x), y)) + λ * mean(ans))
+end
 
+function train!(data_loader, cm::CausalModel, A::CausalVar, U::Tuple, X::Tuple, pred, adv, ω, λ, l, opt_pred, opt_adv; cfs = 100)
     ps_pred = Flux.params(pred)
     ps_adv = Flux.params(adv)
+
     losses = Float64[]
 
-    for i in 1:size(df, 1)
-        x, y, a = df_x[i], df_y[i], df_a[i]
-        d = df_d[i]
-        loss_i(x, y, a) = loss(x, y, a, d)
-        pred_g = gradient(() -> loss_i(x, y, a), ps_pred)
-        adv_g = gradient(() -> -loss_i(x, y, a), ps_adv)
-        Flux.update!(opt, ps_pred, pred_g)
-        Flux.update!(opt, ps_adv, adv_g)
-        push!(losses, mean(l(pred(x), y)))
+    for (x, y, a) in data_loader
+        pred_g = gradient(() -> ℒ(cm, X, x[1], y[1], A, a[1], U, adv, pred, l, ω, λ = λ, epochs = cfs), ps_pred)
+        adv_g = gradient(() -> -ℒ(cm, X, x[1], y[1], A, a[1], U, adv, pred, l, ω, λ = λ, epochs = cfs), ps_adv)
+        Flux.update!(opt_pred, ps_pred, pred_g)
+        Flux.update!(opt_adv, ps_adv, adv_g)
+        push!(losses, mean(l(pred(x[1]), y[1])))
     end
     return losses
 end

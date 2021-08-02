@@ -1,8 +1,7 @@
 using CounterfactualFairness, Test
 using Omega, Flux, Distributions
-using DataFrames, CSV
-using Distances, Base.Threads
-using Bijectors
+using DataFrames, CSV, ProgressMeter
+using UnicodePlots
 
 # df = CSV.read("law_data.csv", DataFrame)
 # df = df[!, [2, 3, 4, 5, 7]]
@@ -68,13 +67,22 @@ Y = add_endo_variable!(cm, :Y, θ -> 11 ~ Normal(θ, sqrt(0.1)), Y4)
 
 pred = Chain(Dense(4, 3), Dense(3, 2), Dense(2, 1))
 adv = Chain(Dense(5, 3), Dense(3, 2, relu))
-ps_pred = Flux.params(pred)
-ps_adv = Flux.params(adv)
-opt = Flux.Optimise.ADAM()
+opt_pred = Flux.Optimise.ADAM(0.001)
+opt_adv = Flux.Optimise.ADAM()
 λ = 0.1
 
+n = 500
 l(x, y) = Flux.Losses.logitbinarycrossentropy(x, y)
-c = (X1, X2, X3, X4)
+X = (X1, X2, X3, X4)
 U = (U₁, U₂, U₃, U₄, U₅)
-obs = DataFrame(X1 = randsample(ω -> X1(ω), 100), X2 = randsample(ω -> X2(ω), 100), X3 = randsample(ω -> X3(ω), 100), X4 = randsample(ω -> X4(ω), 100), A = randsample(ω -> A(ω), 100), Y = randsample(ω -> Y(ω), 100))
-train!(obs, cm, A, U, c, pred, adv, defω(), λ, l, opt)
+df = DataFrame(X1 = randsample(ω -> X1(ω), n), X2 = randsample(ω -> X2(ω), n), X3 = randsample(ω -> X3(ω), n), X4 = randsample(ω -> X4(ω), n), A = randsample(ω -> A(ω), n), Y = randsample(ω -> Y(ω), n))
+df_x, df_y, df_a = Vector.(eachrow(df[!, Not([:A, :Y])])), df[!, :Y], df[!, :A]
+train = Flux.Data.DataLoader((df_x, df_y, df_a))
+
+losses = Float64[]
+p = Progress(n, dt=0.5, barglyphs=BarGlyphs("[=> ]"), barlen=50, color=:green)
+for i in 1:10
+    sleep(0.1)
+    push!(losses, train!(train, cm, A, U, X, pred, adv, defω(), λ, l, opt_pred, opt_adv)...)
+    ProgressMeter.next!(p)
+end

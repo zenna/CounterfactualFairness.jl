@@ -1,4 +1,5 @@
-using Omega, Random
+using Omega, Random, NamedTupleTools
+using OrderedCollections: OrderedDict
 import Omega:intervene, Interventions
 
 export Context, Intervention, DifferentiableIntervention, 
@@ -6,16 +7,16 @@ export Context, Intervention, DifferentiableIntervention,
 
 "Maps every exogenous variable to its value"
 struct Context{N <: Real}
-    c::Dict{Symbol,N}
+    c::Vector{Pair{Symbol, N}}
 end
 
 function Context(s::AbstractVector{Symbol}, v::AbstractVector{T} where T <: Real)
-   return Context(Dict(zip(s, v)))
+   return Context(convert(Vector{Pair}, namedtuple(s, v)))
 end
 
-Context(c::NamedTuple) = Context(convert(Dict, c))
+Context(c::NamedTuple) = Context(convert(Vector{Pair}, c))
 
-eltype(ctx::Context) = eltype(values(ctx.c))
+eltype(ctx::Context{T}) where T = T
 
 """
 Intervention on a variable in the model,
@@ -89,7 +90,7 @@ struct Intervention{T <: Real}
     x::T
 end
 
-eltype(i::Intervention) = eltype(i.x)
+eltype(i::Intervention{T}) where T = T
 
 """
     `apply_context(model::CausalModel, context::Context)`
@@ -97,33 +98,37 @@ eltype(i::Intervention) = eltype(i.x)
 Returns vector of values the variables in the model take when applied to the context.
 """
 function apply_context(model::CausalModel, context::Context, ω::AbstractΩ)
-    m = eltype(context)[]
-    for key in keys(context.c)
-        m = vcat(m, context.c[key])
+    val = eltype(context)[]
+    names = Symbol[]
+    for p in context.c
+        val = [val; p.second]
+        names = [names; p.first]
     end
     for n in 1:nv(model)
         parents = inneighbors(model, n)
         isexo = Bool(length(parents) == 0)
         if !(isexo)
-            p = [m[parent] for parent in parents] # p contains values of parent variables
             v = variable(model, n).func
             if length(v) != 1
-                m = vcat(m, v[1](v[2], p...))
+                val = [val; v[1](v[2], val[parents]...)]
             else
-                if typeof(v[1](p...)) <: Member{T, Int64} where T
-                    m = vcat(m, v[1](p...)(ω))
+                if isa(v[1](val[parents]...), Member)
+                    val = [val; v[1](val[parents]...)(ω)]
                 else
-                    m = vcat(m, v[1](p...))
+                    val::Vector{eltype(context)} = [val; v[1](val[parents]...)]
                 end
             end
+            names::Vector{Symbol} = [names; variable(model, n).name]
         end
     end
-    return m
+    return namedtuple(names, val)
 end
 
 apply_context(m::CausalModel, c::Context) = apply_context(m, c, defω())
 
 apply_context(m::CausalModel, c::NamedTuple) = apply_context(m, Context(c))
+
+apply_context(m::CausalModel, c::NamedTuple, ω) = apply_context(m, Context(c), ω)
 
 """
     `apply_intervention(model::CausalModel, i::DifferentiableIntervention)`
@@ -134,12 +139,11 @@ apply_context(m::CausalModel, c::NamedTuple) = apply_context(m, Context(c))
 
 Returns the interevened causal model `modelᵢ`
 """
-function apply_intervention(model::CausalModel, i::DifferentiableIntervention)
+function apply_intervention(model::CausalModel, i::DifferentiableIntervention, ω)
     m::Array{eltype(i), 1} = []
     for n in 1:nv(model)
         parents::Array{Int64,1} = inneighbors(model, n)
-        p = [m[p] for p in parents]
-        isexo::Bool = (length(p) == 0)
+        isexo::Bool = (length(parents) == 0)
         elts = !(n == 1) ? i.x[(i.l[n - 1] + 1):i.l[n]] : i.x[1:i.l[1]] # value of the nth variable
         if isexo
             value = elts
@@ -149,13 +153,15 @@ function apply_intervention(model::CausalModel, i::DifferentiableIntervention)
                 p_ = CausalVar(model, variable(model, parent).name)
                 v = intervene(v, p_ => m[parent])
             end
-            value = randsample(ω -> v(ω))
+            value = v(ω)
         end
         new_val = value .* i.β[i.l[n]] .+ elts .* (1 - i.β[i.l[n]]) # applying the intervention to the variable
         m = vcat(m, new_val)
     end
     return m
 end
+
+apply_intervention(model::CausalModel, i::DifferentiableIntervention) = apply_intervention(model, i, defω())
 
 function apply_intervention(model, intervention::Intervention)
     m = deepcopy(model)
