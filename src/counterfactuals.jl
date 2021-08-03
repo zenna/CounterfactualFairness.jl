@@ -1,4 +1,4 @@
-using Omega, LightGraphs
+using Omega, LightGraphs, Base.Threads
 import Omega: Interventions, intervene
 
 export isNonDesc, counterfactual
@@ -58,7 +58,8 @@ end
 function counterfactual(Y::Symbol, V::NamedTuple, i::Intervention, model::CausalModel, ω::AbstractΩ)
     Y_ = CausalVar(model, Y)
     X = CausalVar(model, i.X)
-    for k in keys(V)
+    Y′ = intervene(Y_, X => i.x)(ω)
+    @threads for k in keys(V)
         for n in 1:nv(model)
             if variable(model, n)[:name] == k
                 var = CausalVar(model, variable(model, n)[:name])
@@ -67,5 +68,5 @@ function counterfactual(Y::Symbol, V::NamedTuple, i::Intervention, model::Causal
             end
         end
     end
-    return intervene(Y_, X => i.x)(ω)
+    return Y′
 end

@@ -16,10 +16,6 @@ end
     include("ps.jl")
 end
 
-@testset "Gaussian Causal Graph" begin
-    include("graph.jl")
-end
-
 @testset "FairLearning" begin
     include("fl.jl")
 end

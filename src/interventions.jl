@@ -1,5 +1,4 @@
 using Omega, Random, NamedTupleTools
-using OrderedCollections: OrderedDict
 import Omega:intervene, Interventions
 
 export Context, Intervention, DifferentiableIntervention, 
@@ -97,7 +96,7 @@ eltype(i::Intervention{T}) where T = T
 
 Returns vector of values the variables in the model take when applied to the context.
 """
-function apply_context(model::CausalModel, context::Context, ω::AbstractΩ)
+function apply_context(model::CausalModel, context::Context, ω::AbstractΩ = defω(); return_type = NamedTuple)
     val = eltype(context)[]
     names = Symbol[]
     for p in context.c
@@ -121,23 +120,20 @@ function apply_context(model::CausalModel, context::Context, ω::AbstractΩ)
             names::Vector{Symbol} = [names; variable(model, n).name]
         end
     end
-    return namedtuple(names, val)
+    if(return_type == Vector || return_type == Array)
+        return val
+    else
+        return namedtuple(names, val)
+    end
 end
 
-apply_context(m::CausalModel, c::Context) = apply_context(m, c, defω())
-
-apply_context(m::CausalModel, c::NamedTuple) = apply_context(m, Context(c))
-
-apply_context(m::CausalModel, c::NamedTuple, ω) = apply_context(m, Context(c), ω)
+apply_context(m::CausalModel, c::NamedTuple, ω::AbstractΩ = defω(); return_type = NamedTuple) = 
+    apply_context(m, Context(c), ω, return_type = return_type)
 
 """
     `apply_intervention(model::CausalModel, i::DifferentiableIntervention)`
 
 # Returns - (vector of) values of each variable in `model` after applying the intervention.
-
-    `apply_intervention(model, i::Intervention)`
-
-Returns the interevened causal model `modelᵢ`
 """
 function apply_intervention(model::CausalModel, i::DifferentiableIntervention, ω)
     m::Array{eltype(i), 1} = []
@@ -156,18 +152,23 @@ function apply_intervention(model::CausalModel, i::DifferentiableIntervention, �
             value = v(ω)
         end
         new_val = value .* i.β[i.l[n]] .+ elts .* (1 - i.β[i.l[n]]) # applying the intervention to the variable
-        m = vcat(m, new_val)
+        m = [m; new_val]
     end
     return m
 end
 
 apply_intervention(model::CausalModel, i::DifferentiableIntervention) = apply_intervention(model, i, defω())
 
+"""
+    `apply_intervention(model, i::Intervention)`
+
+Returns the interevened causal model `modelᵢ`
+"""
 function apply_intervention(model, intervention::Intervention)
     m = deepcopy(model)
     for n in 1:nv(model)
         if intervention.X == variable(model, n).name
-            m.scm[n] = Variable((intervention.X, ω -> intervention.x))
+            m.scm[n] = Variable((intervention.X, (identity, intervention.x)))
             for p in inneighbors(m, n)
                 rem_edge!(m, p, n)
             end
@@ -176,6 +177,7 @@ function apply_intervention(model, intervention::Intervention)
     end
     return m
 end
+
 apply_intervention(g::CausalModel, p::Pair{CausalVar, Y}) where Y = 
     apply_intervention(g, Intervention(p.first.varname, p.second))
 

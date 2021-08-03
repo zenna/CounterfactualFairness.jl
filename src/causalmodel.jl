@@ -1,4 +1,4 @@
-using LightGraphs, NamedTupleTools, Omega, Distributions, Base.Threads
+using LightGraphs, NamedTupleTools, Omega, Distributions
 
 import LightGraphs:
     AbstractGraph, nv, ne,
@@ -57,7 +57,7 @@ indegree(g::CausalModel) = indegree(g.dag)
 outdegree(g::CausalModel) = outdegree(g.dag)
 
 """
-Defines the variable `varname` in the model
+Defines the variable `varname` in the causal model as a functor of ω.
 """
 struct CausalVar{T}
     model::CausalModel{T}
@@ -83,7 +83,11 @@ function (v::CausalVar)(ω::AbstractΩ)
                 end
             end
         else
-            cm::Vector{Float64} = [cm; func(ω)]
+            if isa(func, Member)
+                cm = [cm; func(ω)]
+            else
+                cm = [cm; func[2]]
+            end
         end
         if variable(v.model, i).name == v.varname
             return cm[i]
@@ -101,9 +105,10 @@ function vertex(c::CausalVar)
     error("The vertex does not exist")
 end
 
-function (g::CausalModel)(ω::AbstractΩ)
+function (g::CausalModel)(ω::AbstractΩ; return_type = Vector)
     # order = topological_sort_by_dfs(g.dag)
     cm = Float64[]
+    names = Symbol[]
     for i in 1:nv(g)
         # parents = map(p -> getindex(order, p), inneighbors(g, i))
         parents = inneighbors(g, i)
@@ -120,17 +125,53 @@ function (g::CausalModel)(ω::AbstractΩ)
                 end
             end  
         else
-            cm::Vector{Float64} = [cm; func(ω)]
+            if isa(func, Member)
+                cm = [cm; func(ω)]
+            else
+                cm::Vector{Float64} = [cm; func[2]]
+            end
         end
+        names::Vector{Symbol} = [names; variable(g, i).name]
     end
-    return cm
+    if return_type == NamedTuple
+        return namedtuple(names, cm)
+    else
+        return cm
+    end
 end
 
+"""
+    `add_exo_variable!(m::CausalModel, name::Symbol, dist)`
+
+To add an exogenous variable to a causal model.
+
+### Inputs -
+- The causal model where the exogenous variable must be added
+- The name of the exogenous variable (as type Symbol)
+- The distribution of the variable as random variable in `Omega`
+
+### Returns -
+- The `CausalVar` of the variable
+"""
 function add_exo_variable!(m::CausalModel, name::Symbol, dist)
     add_vertex!(m, (name, dist))
     return CausalVar(m, name)
 end
 
+"""
+    `add_endo_variable!(m::CausalModel, name::Symbol, func, parents...)`
+
+To add an endogenous variable to a causal model.
+
+### Inputs -
+- The causal model where the endogenous variable must be added
+- The name of the endogenous variable (as type Symbol)
+- Real numbers or ω (if present) must be entered first,
+ followed by the `CausalVar` of parent variables 
+
+### Returns -
+- The `CausalVar` of the variable
+"""
 function add_endo_variable!(m::CausalModel, name::Symbol, func, parents::CausalVar...)
     # var = ω -> func(map(parents, ω)...)
     add_vertex!(m, (name, (func,)))

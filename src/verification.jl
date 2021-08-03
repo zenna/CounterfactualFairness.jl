@@ -1,5 +1,4 @@
 using Distributions, Omega
-using ForwardDiff
 
 export verify, cf_effect, ps_effect
 

@@ -11,6 +11,6 @@ Yb = add_endo_variable!(g, :Yb, +, Ya, U₂)
 Z = add_endo_variable!(g, :Z, *, 1/3, Yb)
 
 c = ω -> counterfactual(:Z, (Ya = 60.0, Yb = 85.0), CounterfactualFairness.Intervention(:X, 15.0), g, ω)
-@test isapprox(randsample(ω -> c(ω)), 28.33, atol = 0.1) # 85/3 = 28.33 # Taking too long
+@test isapprox(randsample(ω -> c(ω)), 28.33, atol = 0.1) # 85/3 = 28.33
 @test isNonDesc(g, (:U₁, :U₃, :X, :Ya), (:U₂,)) == true
 @test isNonDesc(g, (:U₁, :U₃, :X, :Ya, :Yb, :Z), (:U₂,)) == false

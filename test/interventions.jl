@@ -15,7 +15,7 @@ Z_intervene = intervene(Z, X => 12.30)
 Z_intervene(ω)
 @test Z_intervene(ω) != Z(ω)
 
-context = Context((U₁ = 1.23, U₂ = 15, U₃ = 1.451))
+context = Context((U₁ = 1.23, U₂ = 15., U₃ = 1.451))
 output = apply_context(g, context)
 i = DifferentiableIntervention(:X, 15, g, context)
 apply_intervention(g, i)
@@ -26,9 +26,12 @@ function loss(xβ)
     β = xβ[div(n, 2) + 1:end]
     intervention_ = DifferentiableIntervention(x, β, i.l)
     output = apply_intervention(g, intervention_)
-    loss_ = sum(output)
+    loss_ = mean(output)
     return loss_
 end
+# Does not work with Flux.gradient: https://github.com/FluxML/Zygote.jl/issues/454
+# MethodError: no method matching +(::Float64, ::Vector{Float64})      
+# For element-wise addition, use broadcasting with dot syntax: scalar .+ array
 @test typeof(ForwardDiff.gradient(loss, vcat(i.x, i.β))) == Array{Float64,1}
 
 i = CounterfactualFairness.Intervention(:X, 15)

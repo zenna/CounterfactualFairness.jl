@@ -11,13 +11,15 @@ Yb = add_endo_variable!(g, :Yb, +, Ya, U₂)
 Z = add_endo_variable!(g, :Z, /, X, U₃)
 
 @test typeof(X) == CausalVar{Int64}
-@inferred apply_context(g, (U₁ = 1.23, U₂ = 15, U₃ = 1.451))
-output = apply_context(g, (U₁ = 1.23, U₂ = 15, U₃ = 1.451))
+c = Context((U₁ = 1.23, U₂ = 15., U₃ = 1.451))
+@inferred Vector{Float64} apply_context(g, c, return_type = Vector) # or return_type = Array
+@inferred NamedTuple apply_context(g, c) # Default return type is NamedTuple
+output = apply_context(g, (U₁ = 1.23, U₂ = 15., U₃ = 1.451))
 
 ω = defω()
-@inferred g(ω)
-output2 = g(ω)
+@inferred Vector{Float64} g(ω)
+output2 = g(ω, return_type = NamedTuple) # Default value of return_type is Vector
 @test typeof(output) == typeof(output2)
 
 @test typeof(X(ω)) == Float64
-@test Ya(ω) == output2[5]
+@test Ya(ω) == output2.Ya
