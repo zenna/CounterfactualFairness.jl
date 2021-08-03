@@ -17,5 +17,5 @@ end
 end
 
 @testset "FairLearning" begin
-    include("fl.jl")
+    include("train.jl")
 end

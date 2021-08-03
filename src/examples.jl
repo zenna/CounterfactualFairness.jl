@@ -5,6 +5,9 @@ export @load_law_school, @load_adult, @load_synthetic
 """
 Macro to create probabilistic causal model of law school data,
 used in the paper, [Counterfactual Fairness](https://papers.nips.cc/paper/2017/hash/a486cd07e4ac3d270571622f4f316ec5-Abstract.html).
+- Sensitive attributes : :Sex, :Race
+- Observed variables : :GPA, :LSAT
+- Exogenous variables : :Knowledge
 """
 macro load_law_school()
     quote
@@ -58,6 +61,9 @@ end
 Macro to create the probabilistic causal model for 
 the toy dataset used in the paper - 
 [Adversarial Learning for Counterfactual Fairness](https://arxiv.org/pdf/2008.13122.pdf)
+- Sensitive attributes : :A
+- Observed variables : :X1, :X2, :X3, :X4
+- Exogenous variables : :U₁, :U₂, :U₃, :U₄, :U₅
 """
 macro load_synthetic()
     toy = CausalModel()
