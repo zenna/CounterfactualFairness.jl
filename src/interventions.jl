@@ -1,8 +1,10 @@
 using Omega, Random, NamedTupleTools
-import Omega:intervene, Interventions
+import Omega:intervene
 
 export Context, Intervention, DifferentiableIntervention, 
-    apply_context, apply_intervention, intervene
+    apply_context, apply_intervention, intervene, Interventions
+
+struct Interventions end
 
 "Maps every exogenous variable to its value"
 struct Context{N <: Real}
@@ -24,7 +26,7 @@ Intervention on a variable in the model,
 -`β` : Denotes if each value in `x` is affected (1) or not (0)
 -`l` : Cumulative Lengths of each variable in the model
 """
-struct DifferentiableIntervention{T1 <: Real,T2 <: Real}
+struct DifferentiableIntervention{T1 <: Real,T2 <: Real} <: Interventions
     x::Vector{T1}
     β::Vector{T2}
     l::Vector{Int64}
@@ -84,7 +86,7 @@ end
 
 eltype(i::DifferentiableIntervention) = eltype(i.x)
 
-struct Intervention{T <: Real}
+struct Intervention{T <: Real} <: Interventions
     X::Symbol
     x::T
 end

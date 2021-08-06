@@ -12,13 +12,22 @@ It enables the user to do the following -
 
 # Installation
 
-```
-(@v1.6) pkg> add https://github.com/zenna/CounterfactualFairness.jl
+```julia
+(@v1.6) pkg> add https://github.com/zenna/CounterfactualFairness.jl#arw-week2
 ```
 
 # Usage
 
 To start using the package,
-```
+```julia
 julia> using CounterfactualFairness
 ```
+
+To see examples of how to use the package: 
+
+```julia
+julia> using Pluto
+julia> Pluto.run()
+```
+
+Paste [this](plutodocs/cm.jl) link in "Open from file" section.

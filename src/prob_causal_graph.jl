@@ -12,6 +12,7 @@ function empirical_mechanism(P, A, B)
     (; a=Z, b=P.μ[A] + Z * ( - P.μ[B]), c=P.Σ[A,A] - Z * P.Σ[B,A])
 end
 
+"Returns the fully specified causal graph assuming gausain mechanism for each variable"
 function prob_causal_graph(df, cg)
     if any(Bool.(Matrix(adjacency_matrix(cg, dir=:in)) .& Matrix(adjacency_matrix(cg, dir=:out))))
         println("There are undirected edges in the graph, the graph is: ", cg)

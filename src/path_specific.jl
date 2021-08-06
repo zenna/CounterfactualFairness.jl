@@ -5,6 +5,12 @@ import Omega:intervene, Interventions
 
 export apply_ps_intervention, BlockedEdges
 
+struct PS_Intervention{T <: Interventions} <: Interventions
+    be::BlockedEdges
+    x₁::I
+    x₂::I
+end
+
 struct BlockedEdges{T}
     edges::Vector{Edge{T}}
 end
@@ -50,3 +56,6 @@ function apply_ps_intervention(model::CausalModel, x₁::DifferentiableIntervent
     end
     return ps_int
 end
+
+apply_ps_intervention(model::CausalModel, psint::PS_Intervention) = 
+apply_ps_intervention(model, psint.x₁, psint.be, psint.x₂)
