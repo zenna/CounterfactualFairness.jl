@@ -4,7 +4,7 @@ import Omega:intervene
 export Context, Intervention, DifferentiableIntervention, 
     apply_context, apply_intervention, intervene, Interventions
 
-struct Interventions end
+abstract type Interventions end
 
 "Maps every exogenous variable to its value"
 struct Context{N <: Real}

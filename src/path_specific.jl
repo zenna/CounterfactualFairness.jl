@@ -1,15 +1,9 @@
 using Omega, Random
 using LightGraphs:SimpleEdge
 
-import Omega:intervene, Interventions
+import Omega:intervene
 
-export apply_ps_intervention, BlockedEdges
-
-struct PS_Intervention{T <: Interventions} <: Interventions
-    be::BlockedEdges
-    x₁::I
-    x₂::I
-end
+export apply_ps_intervention, BlockedEdges, PS_Intervention
 
 struct BlockedEdges{T}
     edges::Vector{Edge{T}}
@@ -27,6 +21,12 @@ function (B::BlockedEdges)(g::CausalModel)
         end
     end
     return blocked_vertices
+end
+
+struct PS_Intervention{I <: Interventions} <: Interventions
+    be::BlockedEdges
+    x₁::I
+    x₂::I
 end
 
 function apply_ps_intervention(model::CausalModel, x₁::Intervention, blocked_edges::BlockedEdges, x₂::Intervention, ω::AbstractΩ)
@@ -58,4 +58,4 @@ function apply_ps_intervention(model::CausalModel, x₁::DifferentiableIntervent
 end
 
 apply_ps_intervention(model::CausalModel, psint::PS_Intervention) = 
-apply_ps_intervention(model, psint.x₁, psint.be, psint.x₂)
+            apply_ps_intervention(model, psint.x₁, psint.be, psint.x₂)
