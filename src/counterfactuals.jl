@@ -85,3 +85,6 @@ function counterfactual(Y::Symbol, V::NamedTuple, i::PS_Intervention, model::Cau
     end
     return Y′
 end
+
+counterfactual(Y::Symbol, V::NamedTuple, i::Interventions, model::CausalModel) = 
+        ω -> counterfactual(Y, V, i, model, ω)

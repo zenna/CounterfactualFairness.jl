@@ -1,4 +1,4 @@
-using MLJBase, Omega, CausalInference
+using MLJBase, Omega, CausalInference, MLJModels
 const MMI = MLJBase.MLJModelInterface
 
 """
@@ -22,13 +22,14 @@ end
 function MLJBase.clean!(model::CounterfactualWrapper)
     warning = ""
 	model.test ∈ [typeof(gausscitest), typeof(cmitest)] || (warning *= "Conditional independence tests for PC algorithm must be either `gausscitest` or `cmitest`\n")
-    # PCA requires the dataframe to have float values
 	# Constraint on p (?)
     return warning
 end
 
 # fitresult is of type CausalModel
 function MMI.fit(model::CounterfactualWrapper, verbosity::Int, X)
+    m = fit!(machine(ContinuousEncoder(), X))
+    X = MLJBase.transform(m, X)
 	fitresult = prob_causal_graph(X, p = model.p, test = model.test)
 	return fitresult, nothing, nothing
 end
@@ -37,7 +38,7 @@ end
 function MMI.transform(model::CounterfactualWrapper, fitresult, Xnew)
 	ŷ = []
     for r in eachrow(Xnew)
-        c = ω -> counterfactual(model.cf, convert(NamedTuple, r[Not(model.cf)]), model.interventions, fitresult, ω)
+        c = counterfactual(model.cf, convert(NamedTuple, r[Not(model.cf)]), model.interventions, fitresult)
         ŷ = [ŷ; randsample(ω -> c(ω))]
     end
     Xnew[!, :Ŷ] = ŷ
