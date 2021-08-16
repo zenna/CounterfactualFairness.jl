@@ -48,9 +48,27 @@ X = (CausalVar(toy, :X1), CausalVar(toy, :X2), CausalVar(toy, :X3), CausalVar(to
 U = (CausalVar(toy, :U₁), CausalVar(toy, :U₂), CausalVar(toy, :U₃), CausalVar(toy, :U₄), CausalVar(toy, :U₅))
 A = CausalVar(toy, :A)
 Y = CausalVar(toy, :Y)
-df = DataFrame(X1 = randsample(ω -> X[1](ω), n), X2 = randsample(ω -> X[2](ω), n), X3 = randsample(ω -> X[3](ω), n), X4 = randsample(ω -> X[4](ω), n), A = randsample(ω -> A(ω), n), Y = randsample(ω -> Y(ω), n))
+
+df = DataFrame(
+            X1 = randsample(ω -> X[1](ω), n),
+            X2 = randsample(ω -> X[2](ω), n), 
+            X3 = randsample(ω -> X[3](ω), n), 
+            X4 = randsample(ω -> X[4](ω), n),
+            A = randsample(ω -> A(ω), n),
+            Y = randsample(ω -> Y(ω), n)
+        )
+
 df_x, df_y, df_a = Vector.(eachrow(df[!, Not([:A, :Y])])), df[!, :Y], df[!, :A]
 train = Flux.Data.DataLoader((df_x, df_y, df_a))
+
+test = DataFrame(
+    X1 = randsample(ω -> X[1](ω), 10),
+    X2 = randsample(ω -> X[2](ω), 10), 
+    X3 = randsample(ω -> X[3](ω), 10), 
+    X4 = randsample(ω -> X[4](ω), 10),
+    A = randsample(ω -> A(ω), 10),
+    Y = randsample(ω -> Y(ω), 10)
+)
 
 losses = Float64[]
 p = Progress(n, dt=0.5, barglyphs=BarGlyphs("[=> ]"), barlen=50, color=:green)
