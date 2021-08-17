@@ -1,4 +1,5 @@
 using MLJ, Flux, CounterfactualFairness, Omega
+using DataFrames
 
 toy = @load_synthetic
 pred = Chain(Dense(4, 3), Dense(3, 2), Dense(2, 1))
@@ -25,3 +26,4 @@ model = AdversarialWrapper(cm = toy, grp = :A, latent = [:U₁, :U₂, :U₃, :U
 
 mach = machine(model, df[!, Not(:Y)], df[!, :Y])
 fit!(mach)
+predict(mach, df[1:3, Not(:Y)])

@@ -68,5 +68,5 @@ function MMI.fit(model::AdversarialWrapper, verbosity::Int, X, y)
 end
 
 function MMI.predict(model::AdversarialWrapper, fitresult, Xnew)
-	return fitresult(Xnew)
+	return fitresult(Vector.(eachrow(Xnew[!, Not(model.sensitive)])))
 end
