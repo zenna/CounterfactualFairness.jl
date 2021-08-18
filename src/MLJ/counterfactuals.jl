@@ -1,9 +1,13 @@
 using MLJBase, Omega, CausalInference, MLJModels
 const MMI = MLJBase.MLJModelInterface
 
+export CounterfactualWrapper
+
 """
     CounterfactualWrapper
-
+ To compute counterfactuals of a given dataset.
+ Counterfactuals constitute the third layer of Pearl's Causal Ladder,
+ the first two layers of which are - Association (seeing) and Interventions (doing).
 """
 struct CounterfactualWrapper{I<:Interventions} <: Unsupervised
     test::Function # Conditional independence tests for PC algorithm

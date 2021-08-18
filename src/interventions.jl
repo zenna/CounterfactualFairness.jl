@@ -20,8 +20,8 @@ Context(c::NamedTuple) = Context(convert(Vector{Pair}, c))
 eltype(ctx::Context{T}) where T = T
 
 """
-Intervention on a variable in the model,
-    which makes `apply_intervention` differentiable
+ Intervention on a variable in the model,
+ which makes `apply_intervention` differentiable
 -`x` : Values of all variables in the model
 -`β` : Denotes if each value in `x` is affected (1) or not (0)
 -`l` : Cumulative Lengths of each variable in the model
@@ -96,7 +96,15 @@ eltype(i::Intervention{T}) where T = T
 """
     `apply_context(model::CausalModel, context::Context)`
 
-Returns vector of values the variables in the model take when applied to the context.
+## Inputs -
+- model : CausalModel
+- context : The context to which the causal model is applied. (of type `NamedTuple` or `Context`)
+- ω : Random Variable, defaults to defω()
+
+## Keyword Argument -
+- return_type : Defaults to `NamedTuple`, which returns a named tuple
+ of variable name and the value the variable takes. Also takes `Vector` and `Array`,
+ which returns a vector of values the variables in the model take when applied to the context.
 """
 function apply_context(model::CausalModel, context::Context, ω::AbstractΩ = defω(); return_type = NamedTuple)
     val = eltype(context)[]

@@ -19,3 +19,7 @@ end
 @testset "FairLearning" begin
     include("train.jl")
 end
+
+@testset "MLJ AdversarialWrapper" begin
+    include("MLJ/adv.jl")
+end

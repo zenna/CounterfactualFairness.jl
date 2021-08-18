@@ -2,8 +2,15 @@ using MLJBase, Omega, MLJModels, MLJFlux
 
 export AdversarialWrapper
 
-# PenalizedLoss for ℒ? MLJFlux, core.jl uses it in `fit!`
+"""
+    AdversarialWrapper
 
+ As given in the paper - [Adversarial Learning for Counterfactual Fairness](https://arxiv.org/pdf/2008.13122.pdf),
+ it is an algorithm that enables the simulation of counterfactual samples used for
+ training the target fair model, the goal being to produce similar outcomes
+ for every alternate version of any individual. It relies on an adversarial neural learning
+ approach.
+"""
 struct AdversarialWrapper{M<:Chain, N<:Chain} <: Supervised
     cm::CausalModel
 	grp::Symbol
@@ -68,5 +75,5 @@ function MMI.fit(model::AdversarialWrapper, verbosity::Int, X, y)
 end
 
 function MMI.predict(model::AdversarialWrapper, fitresult, Xnew)
-	return fitresult(Vector.(eachrow(Xnew[!, Not(model.sensitive)])))
+	return reduce(vcat, fitresult.(Vector.(eachrow(Xnew[!, Not(model.grp)]))))
 end

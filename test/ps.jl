@@ -14,10 +14,17 @@ blocked_edges = BlockedEdges([Edge(3 => 4)])
 x₁ = CounterfactualFairness.Intervention(:X, 15)
 x₂ = CounterfactualFairness.Intervention(:X, 20)
 @test all(isapprox.(randsample(apply_ps_intervention(g, x₁, blocked_edges, x₂))[2:end], [15.0, 80.0, 100.0, 100/3], atol = 0.0001))
+psint = PS_Intervention(blocked_edges, x₁, x₂)
+p = apply_ps_intervention(g, psint)
+@test randsample(p)[2:end] == randsample(apply_ps_intervention(g, x₁, blocked_edges, x₂))[2:end]
+@inferred p(defω())
 
 ctx = Context((U₁ = 25, ))
 x₁ = DifferentiableIntervention(:X, 15, g, ctx)
 x₂ = DifferentiableIntervention(:X, 20, g, ctx)
+psint = PS_Intervention(blocked_edges, x₁, x₂)
+p = apply_ps_intervention(g, psint)
+@test p == apply_ps_intervention(g, x₁, blocked_edges, x₂)
 @test all(isapprox.(randsample(ω -> apply_ps_intervention(g, x₁, blocked_edges, x₂)), [25.0, 15.0, 80.0, 100.0, 100/3], atol = 0.001))
 
 function loss(xβ)

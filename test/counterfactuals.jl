@@ -14,3 +14,10 @@ c = ω -> counterfactual(:Z, (Ya = 60.0, Yb = 85.0), CounterfactualFairness.Inte
 @test isapprox(randsample(ω -> c(ω)), 28.33, atol = 0.1) # 85/3 = 28.33
 @test isNonDesc(g, (:U₁, :U₃, :X, :Ya), (:U₂,)) == true
 @test isNonDesc(g, (:U₁, :U₃, :X, :Ya, :Yb, :Z), (:U₂,)) == false
+
+
+blocked_edges = BlockedEdges([Edge(3 => 4)])
+x₁ = CounterfactualFairness.Intervention(:X, 15)
+x₂ = CounterfactualFairness.Intervention(:X, 20)
+psint = PS_Intervention(blocked_edges, x₁, x₂)
+@test isapprox(counterfactual(:Z, (Ya = 60.0, Yb = 85.0), psint, g, defω()), 33.33, atol = 0.1)

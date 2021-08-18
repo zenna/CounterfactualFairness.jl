@@ -26,4 +26,6 @@ model = AdversarialWrapper(cm = toy, grp = :A, latent = [:U₁, :U₂, :U₃, :U
 
 mach = machine(model, df[!, Not(:Y)], df[!, :Y])
 fit!(mach)
-predict(mach, df[1:3, Not(:Y)])
+ŷ = predict(mach, df[1:3, Not(:Y)])
+@inferred Vector{Float64} predict(mach, df[1:3, Not(:Y)])
+@test length(ŷ) == 3

@@ -7,6 +7,7 @@ ignore(f) = f()
 export FairLearning!, train!, cond_latent_var, ℒ, P
 
 # Assuming Y, the node to be predicted, is in the model as Normal(decision model, 1)
+" FairLearning algorithm from the Counterfactual Fairness paper by Kusner et al"
 function FairLearning!(df, model::CausalModel, Y, sensitive::Tuple, prior::Tuple, loss, opt, ps, ω)    
     # Sampling from posterior (randsample(K |ᶜ Evidence; alg = MH))...MCMC Sampling [Line: 2]
     # u -> result from above, x -> all non-descendants of A (sensitive)
@@ -39,7 +40,6 @@ function FairLearning!(df, model::CausalModel, Y, sensitive::Tuple, prior::Tuple
     data = zip(u, df[!, Y])
     Flux.train!(loss, ps, data, opt)
 end
-
 
 function cond_latent_var(U::Tuple, X::Vector{Pair{CausalVar{Int64}, Float64}}, S::CausalVar, s::Real, ω::AbstractΩ)
     ret = Float64[]

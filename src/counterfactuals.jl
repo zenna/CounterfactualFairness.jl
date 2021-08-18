@@ -40,9 +40,6 @@ function isNonDesc(m::CausalModel, Y::Tuple, A::Tuple)
     return true
 end
 
-# Y is a linear regression of X and A (observable variables)
-# In the paper, the authors have written the following:
-# Y ~ Normal(* linear combination of X and A *, 1)
 """
     `counterfactual(Y::Symbol, V::NamedTuple, i::Intervention, model::CausalModel, ω::AbstractΩ)`
 
@@ -51,7 +48,7 @@ end
 - V : NamedTuple of obvservable variables and their values
 - i : Intervention to be performed
 - model : Causal model
-- ω
+- ω (optional)
 
 # Returns the counterfactual P(Yₐ = y | V = v), where Yₐ is the intervened distribution
 """
@@ -71,7 +68,6 @@ function counterfactual(Y::Symbol, V::NamedTuple, i::Intervention, model::Causal
     return Y′
 end
 
-# test remaining
 function counterfactual(Y::Symbol, V::NamedTuple, i::PS_Intervention, model::CausalModel, ω::AbstractΩ)
     Y′ = apply_ps_intervention(model, i)(ω)[sum([Y == variable(model, i).name ? i : 0 for i in 1:nv(model)])]
     @threads for k in keys(V)

@@ -4,7 +4,7 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Functions" => "functions.md"
-    ]
+    ],
     sitename = "CounterfactualFairness.jl"
 )
 

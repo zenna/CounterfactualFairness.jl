@@ -3,7 +3,8 @@ using Distributions, Omega
 export verify, cf_effect, ps_effect
 
 # CF = 1/m Σ (E(Δ(h(X) - h(X <- a′))))
-function verify(test, Y::CausalVar, X, A::Symbol, a′, a, effect = cf_effect; ϵ=0.01, epochs = 10)
+"To verify counterfactual (or path-specific) fairness"
+function verify(test, Y::CausalVar, X, A::Symbol, a′, a, effect=cf_effect; ϵ=0.01, epochs=10)
     m = effect(test, Y, X, A, a′, a; epochs)
     @show m
     if m > ϵ
@@ -13,7 +14,8 @@ function verify(test, Y::CausalVar, X, A::Symbol, a′, a, effect = cf_effect; �
     end
 end
 
-function cf_effect(test, Y::CausalVar, X, A::Symbol, a′, a; epochs = 10)
+"Computing counterfactual effect of given data (dataframe)"
+function cf_effect(test, Y::CausalVar, X, A::Symbol, a′, a; epochs=10)
     m = 0
     function cf(ω, x)
         Y_int_a′ = intervene(Y, Intervention(A, a′))(ω)
@@ -21,12 +23,12 @@ function cf_effect(test, Y::CausalVar, X, A::Symbol, a′, a; epochs = 10)
             for n in 1:nv(Y.model)
                 if variable(Y.model, n).name == k
                     v = CausalVar(Y.model, k)(ω)
-                    cond!(ω, isapprox(v, x[k], atol = 0.1))
+                    cond!(ω, isapprox(v, x[k], atol=0.1))
                     break
                 end
             end
         end
-        cond!(ω, isapprox(CausalVar(Y.model, A)(ω), x[A], atol = 0.1))
+        cond!(ω, isapprox(CausalVar(Y.model, A)(ω), x[A], atol=0.1))
         Y_int_a′
     end
     for x in eachrow(test)
@@ -41,7 +43,8 @@ function cf_effect(test, Y::CausalVar, X, A::Symbol, a′, a; epochs = 10)
     return m
 end
 
-function ps_effect(test, Y::CausalVar, X, A::Symbol, a′, a; epochs = 10)
+"Computing path-specific effect of given data (dataframe)"
+function ps_effect(test, Y::CausalVar, X, A::Symbol, a′, a; epochs=10)
     m = 0
     function cf(ω, x₁, x₂)
         int_model = apply_ps_intervention(g, x₁, blocked_edges, x₂, ω)
@@ -50,12 +53,12 @@ function ps_effect(test, Y::CausalVar, X, A::Symbol, a′, a; epochs = 10)
             for n in 1:nv(Y.model)
                 if variable(Y.model, n).name == k
                     v = CausalVar(Y.model, k)(ω)
-                    cond!(ω, isapprox(v, x[k], atol = 0.1))
+                    cond!(ω, isapprox(v, x[k], atol=0.1))
                     break
                 end
             end
         end
-        cond!(ω, isapprox(CausalVar(Y.model, A)(ω), x[A], atol = 0.1))
+        cond!(ω, isapprox(CausalVar(Y.model, A)(ω), x[A], atol=0.1))
         Y_int_a′
     end
     for x in eachrow(test)
