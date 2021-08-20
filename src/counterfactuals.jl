@@ -55,31 +55,29 @@ end
 function counterfactual(Y::Symbol, V::NamedTuple, i::Intervention, model::CausalModel, ω::AbstractΩ)
     Y_ = CausalVar(model, Y)
     X = CausalVar(model, i.X)
-    Y′ = intervene(Y_, X => i.x)(ω)
     @threads for k in keys(V)
         for n in 1:nv(model)
             if variable(model, n).name == k
-                var = CausalVar(model, variable(model, n).name)
+                var = CausalVar(model, k)
                 cond!(ω, isapprox(var(ω), V[k], atol = 0.01))
                 break
             end
         end
     end
-    return Y′
+    return intervene(Y_, X => i.x)(ω)
 end
 
 function counterfactual(Y::Symbol, V::NamedTuple, i::PS_Intervention, model::CausalModel, ω::AbstractΩ)
-    Y′ = apply_ps_intervention(model, i)(ω)[sum([Y == variable(model, i).name ? i : 0 for i in 1:nv(model)])]
     @threads for k in keys(V)
         for n in 1:nv(model)
             if variable(model, n).name == k
-                var = CausalVar(model, variable(model, n).name)
+                var = CausalVar(model, k)
                 cond!(ω, isapprox(var(ω), V[k], atol = 0.01))
                 break
             end
         end
     end
-    return Y′
+    return apply_ps_intervention(model, i)(ω)[sum([Y == variable(model, i).name ? i : 0 for i in 1:nv(model)])]
 end
 
 counterfactual(Y::Symbol, V::NamedTuple, i::Interventions, model::CausalModel) = 

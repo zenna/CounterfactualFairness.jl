@@ -15,8 +15,8 @@ end
 
 # ╔═╡ 4f7d94b6-7678-46fc-9483-830075d4e5c8
 begin
-	# Pkg.add(url = joinpath(dirname(dirname(pwd())), "CounterfactualFairness.jl#arw-week2"))
-	Pkg.add(url = joinpath(dirname(dirname(pwd())), "CounterfactualFairness.jl"))
+	Pkg.add(url = "https://github.com/zenna/CounterfactualFairness.jl#arw-week2")
+	# Pkg.add(url = joinpath(dirname(dirname(pwd())), "CounterfactualFairness.jl"))
 	using CounterfactualFairness
 end
 
@@ -188,7 +188,7 @@ randsample(ω -> count(ω))
 # ╠═565835f6-a27c-455e-9e1a-6ab97a17baa1
 # ╟─abf50dc6-83fe-422a-b417-da5ad8375444
 # ╟─5baa385b-a46b-4407-b5c2-2ad16b7ddf78
-# ╠═bb4da83e-375f-4bfa-ae7d-a31c16fbb545
+# ╟─bb4da83e-375f-4bfa-ae7d-a31c16fbb545
 # ╠═24d29a5b-26d1-402d-bc8c-647ac39d7230
 # ╠═9435ea98-573f-4744-8363-9a34b7080682
 # ╠═b875e2c6-bb9d-4426-9a76-67abdb78cab1
