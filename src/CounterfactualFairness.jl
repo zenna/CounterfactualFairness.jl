@@ -1,4 +1,6 @@
 module CounterfactualFairness
+
+using OmegaCore
 include("causalmodel.jl")
 include("interventions.jl")
 include("path_specific.jl")

@@ -1,4 +1,4 @@
-using CounterfactualFairness, Test
+using CounterfactualFairness, Test, OmegaCore
 
 @testset "Causal Model" begin
     include("causalmodel.jl")
