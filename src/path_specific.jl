@@ -19,7 +19,7 @@ end
 function (B::BlockedEdges)(g::CausalModel)
     blocked_vertices = zeros(Bool, nv(g))
     for e in B.edges
-        blocked_vertices[src(e)] = true
+        blocked_vertices[dst(e)] = true
     end
     for i in 1:nv(g)
         parents = inneighbors(g, i)
@@ -40,16 +40,30 @@ struct PS_Intervention{I <: Interventions} <: Interventions
     x₂::I
 end
 
+"""
+    `apply_ps_intervention(model::CausalModel, x₁::Intervention, blocked_edges::BlockedEdges, x₂::Intervention, ω::AbstractΩ)`
+
+ Apply the model to a path-specific intervention when the 
+ value of a variable is changed from x₁ to x₂ (x₁ is the refernce value, x₂ is the required intervention).
+ ## Inputs -
+ - model : Causal model
+ - x₁ : The refernce intervention
+ - blocked_edges : Edges that are blocked specified as the type `BlockedEdges`
+ - x₂ : The intervention that must be applied to the causal model
+ - ω
+
+ ## Returns -
+ Vector of values the variables in the model take after the applying the path-specific intervention
+"""
 function apply_ps_intervention(model::CausalModel, x₁::Intervention, blocked_edges::BlockedEdges, x₂::Intervention, ω::AbstractΩ)
+    intervened = apply_intervention(model, x₁)(ω)
     blocked_vertices = blocked_edges(model)
-    int_model_x₁::Vector{Float64} = apply_intervention(model, x₁)(ω)
-    int_model_x₂::Vector{Float64} = apply_intervention(model, x₂)(ω)
-    for e in 1:length(blocked_vertices)
-        if blocked_vertices[e]
-            int_model_x₁[e] = int_model_x₂[e]
+    for n in 1:nv(model)
+        if !(blocked_vertices[n])
+            intervened[n] = intervene(CausalVar(model, variable(model, n).name), x₂)(ω)
         end
     end
-    return int_model_x₁
+    return intervened
 end
 
 apply_ps_intervention(model::CausalModel, x₁::Intervention, blocked_edges::BlockedEdges, x₂::Intervention) = 
@@ -60,7 +74,6 @@ function apply_ps_intervention(model::CausalModel, x₁::DifferentiableIntervent
     int_model_x₁ = apply_intervention(model, x₁)
     int_model_x₂ = apply_intervention(model, x₂)
     ps_int = []
-    length(blocked_vertices)
     for e in 1:length(blocked_vertices)
         a = (1 - blocked_vertices[e]) * int_model_x₁[e] + blocked_vertices[e] * int_model_x₂[e]
         ps_int = vcat(ps_int, a)
