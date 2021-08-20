@@ -12,9 +12,9 @@ end
     include("counterfactuals.jl")
 end
 
-@testset "Path Specific Effects" begin
-    include("ps.jl")
-end
+# @testset "Path Specific Effects" begin
+#     include("ps.jl")
+# end
 
 @testset "FairLearning" begin
     include("train.jl")

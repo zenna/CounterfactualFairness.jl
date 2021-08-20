@@ -23,7 +23,7 @@ export nv, ne, edges, rem_edge!,
 # Corresponds to structural equations of the form :name = func(...),
 # where in endogenous variables func is applied to parent variables
 # and in exogenous variables func is applied to context/ω
-const Variable = @NamedTuple{name::Symbol, func::Union{Tuple{Core.Function}, Tuple{Core.Function, <:Real}, Member{<:Sampleable, Int64}}}
+const Variable = @NamedTuple{name::Symbol, func::Union{Tuple{Core.Function}, Tuple{Core.Function, <:Real}, Omega.RandVar}}
 
 "Causal model with `dag` representing the model and `scm` holds the name of the variables and the SCM"
 struct CausalModel{T} <: AbstractGraph{T}
@@ -76,14 +76,14 @@ function (v::CausalVar)(ω::AbstractΩ)
             if length(func) != 1
                 cm = [cm; (func[1]::Function)(func[2], cm[parents]...)]
             else
-                if isa(func[1](cm[parents]...), Member)
+                if isa(func[1](cm[parents]...), Omega.RandVar)
                     cm = [cm; func[1](cm[parents]...)(ω)]
                 else
                     cm = [cm; func[1](cm[parents]...)]
                 end
             end
         else
-            if isa(func, Member)
+            if isa(func, Omega.RandVar)
                 cm = [cm; func(ω)]
             else
                 cm = [cm; func[2]]
@@ -118,14 +118,14 @@ function (g::CausalModel)(ω::AbstractΩ; return_type = Vector)
             if length(func) != 1
                 cm = [cm; (func[1]::Function)(func[2], cm[parents]...)]
             else
-                if isa(func[1](cm[parents]...), Member)
+                if isa(func[1](cm[parents]...), Omega.RandVar)
                     cm = [cm; func[1](cm[parents]...)(ω)]
                 else
                     cm = [cm; (func[1]::Function)(cm[parents]...)]
                 end
             end  
         else
-            if isa(func, Member)
+            if isa(func, Omega.RandVar)
                 cm = [cm; func(ω)]
             else
                 cm::Vector{Float64} = [cm; func[2]]
