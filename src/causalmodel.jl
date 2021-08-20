@@ -201,3 +201,6 @@ variable(g::CausalModel, v::Integer) = g.scm[v]
  Returns all the `Variable`s in the model `g`
 """
 variables(g::CausalModel) = [variable(g, v) for v in 1:nv(g)]
+
+"Returns the DAG of the causal model"
+dag(g::CausalModel) = g.dag

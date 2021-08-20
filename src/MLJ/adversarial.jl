@@ -1,4 +1,4 @@
-using MLJBase, Omega, MLJModels
+using MLJBase, Omega, MLJModels, Flux
 
 export AdversarialWrapper
 
