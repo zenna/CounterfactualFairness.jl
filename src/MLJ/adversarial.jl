@@ -1,5 +1,4 @@
 using MLJBase, Omega, MLJModels, Flux
-using Flux.Data : DataLoader
 
 export AdversarialWrapper
 
