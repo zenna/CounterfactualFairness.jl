@@ -11,7 +11,7 @@ import LightGraphs.SimpleGraphs: SimpleDiGraph, fadj, badj
 
 import Base.eltype
 
-export CausalModel, variable, variables, dag
+export CausalModel, variable, variables, dag,
     add_endo_variable!, add_exo_variable!, CausalVar
 
 export nv, ne, edges, rem_edge!, 
