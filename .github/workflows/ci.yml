@@ -32,7 +32,6 @@ jobs:
               Pkg.add(PackageSpec(url="https://github.com/zenna/Omega.jl", rev="lang:SoftPredicates")); Pkg.instantiate()
               Pkg.add(PackageSpec(url="https://github.com/zenna/Omega.jl", rev="lang:ReplicaExchange")); Pkg.instantiate()
               Pkg.add(PackageSpec(url="https://github.com/zenna/Omega.jl",rev="102cc01d1f7dbb4a4caad822746ced6fa5c7164b:OmegaCore")); Pkg.instantiate()
-              Pkg.add(PackageSpec(url="https://github.com/zenna/Omega.jl", rev="102cc01d1f7dbb4a4caad822746ced6fa5c7164b:OmegaMH")); Pkg.instantiate()
               Pkg.add(PackageSpec(url="https://github.com/zenna/Omega.jl", rev="lang")); Pkg.instantiate()
             '
       - uses: actions/cache@v1
