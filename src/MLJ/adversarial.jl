@@ -62,7 +62,7 @@ function MMI.fit(model::AdversarialWrapper, verbosity::Int, X, y)
 	sensitive = X[!, model.grp]
 	# TODO: Check if the sensitive attribute is continuous or discrete
     obs = Vector.(eachrow(X[!, Not(model.grp)]))
-    data = Flux.DataLoader((obs, y, sensitive))
+    data = Flux.Data.DataLoader((obs, y, sensitive))
 
     O = Tuple([CausalVar(model.cm, name) for name in model.observed])
     A = CausalVar(model.cm, model.grp)
