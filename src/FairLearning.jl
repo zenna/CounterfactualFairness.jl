@@ -94,9 +94,12 @@ function ℒ(cm::CausalModel, X::Tuple, x, y::Float64, A::CausalVar, a::Float64,
 end
 
 function train!(data_loader, cm::CausalModel, A::CausalVar, U::Tuple, X::Tuple, pred, adv, ω, λ, l, opt_pred, opt_adv; cfs = 100)
-    ps_pred = Flux.params(pred)
-    ps_adv = Flux.params(adv)
-
+    ps_pred = ignore() do 
+        Flux.params(pred)
+    end
+    ps_adv = ignore() do
+        Flux.params(adv)
+    end
     losses = Float64[]
 
     for (x, y, a) in data_loader
