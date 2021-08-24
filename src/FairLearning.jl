@@ -100,14 +100,11 @@ function train!(data_loader, cm::CausalModel, A::CausalVar, U::Tuple, X::Tuple, 
     ps_adv = ignore() do
         Flux.params(adv)
     end
-    losses = Float64[]
 
     for (x, y, a) in data_loader
         pred_g = gradient(() -> ℒ(cm, X, x[1], y[1], A, a[1], U, adv, pred, l, ω, λ = λ, epochs = cfs), ps_pred)
         adv_g = gradient(() -> -ℒ(cm, X, x[1], y[1], A, a[1], U, adv, pred, l, ω, λ = λ, epochs = cfs), ps_adv)
         Flux.update!(opt_pred, ps_pred, pred_g)
         Flux.update!(opt_adv, ps_adv, adv_g)
-        push!(losses, mean(l(pred(x[1]), y[1])))
     end
-    return losses
 end
