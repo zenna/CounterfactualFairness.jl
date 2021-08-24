@@ -1,5 +1,8 @@
 using Omega, Random, NamedTupleTools
 import Omega:intervene
+using Flux: @adjoint
+ignore(f) = f()
+@adjoint ignore(f) = f(), _ -> nothing
 
 export Context, Intervention, DifferentiableIntervention, 
     apply_context, apply_intervention, intervene, Interventions
@@ -133,7 +136,9 @@ function apply_context(model::CausalModel, context::Context, ω::AbstractΩ = de
     if(return_type == Vector || return_type == Array)
         return val
     else
-        return namedtuple(names, val)
+        return ignore() do
+            namedtuple(names, val)
+        end
     end
 end
 
