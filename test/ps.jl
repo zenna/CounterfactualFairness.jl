@@ -13,11 +13,14 @@ Z = add_endo_variable!(g, :Z, *,1/3, Yb)
 blocked_edges = BlockedEdges([Edge(3 => 4)])
 x₁ = CounterfactualFairness.Intervention(:X, 15)
 x₂ = CounterfactualFairness.Intervention(:X, 20)
-@test all(isapprox.(randsample(apply_ps_intervention(g, x₁, blocked_edges, x₂))[2:end], [15.0, 80.0, 100.0, 100/3], atol = 0.0001))
+# X must be 20.0 after applying the path specific intervention. Ya takes the value accordingly.
+# The blocked edge is the one from Ya to Yb, 
+# so the values of Yb and Z will be as though the value of X were 15.0.
+@test all(isapprox.(randsample(apply_ps_intervention(g, x₁, blocked_edges, x₂))[2:end], [20.0, 20.0*4, 15.0*4 + 20.0, 80/3], atol = 0.0001))
 psint = PS_Intervention(blocked_edges, x₁, x₂)
 p = apply_ps_intervention(g, psint)
 @test randsample(p)[2:end] == randsample(apply_ps_intervention(g, x₁, blocked_edges, x₂))[2:end]
-@inferred p(defω())
+@inferred Vector{Float64} p(defω())
 
 ctx = Context((U₁ = 25, ))
 x₁ = DifferentiableIntervention(:X, 15, g, ctx)
@@ -25,7 +28,7 @@ x₂ = DifferentiableIntervention(:X, 20, g, ctx)
 psint = PS_Intervention(blocked_edges, x₁, x₂)
 p = apply_ps_intervention(g, psint)
 @test p == apply_ps_intervention(g, x₁, blocked_edges, x₂)
-@test all(isapprox.(randsample(ω -> apply_ps_intervention(g, x₁, blocked_edges, x₂)), [25.0, 15.0, 80.0, 100.0, 100/3], atol = 0.001))
+@test all(isapprox.(randsample(ω -> apply_ps_intervention(g, x₁, blocked_edges, x₂, ω)), [25.0, 20.0, 80.0, 80.0, 80/3], atol = 0.001))
 
 function loss(xβ)
     n = length(xβ)

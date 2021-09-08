@@ -60,7 +60,23 @@ function apply_ps_intervention(model::CausalModel, x₁::Intervention, blocked_e
     blocked_vertices = blocked_edges(model)
     for n in 1:nv(model)
         if !(blocked_vertices[n])
-            intervened[n] = intervene(CausalVar(model, variable(model, n).name), x₂)(ω)
+            if x₂.X == variable(model, n).name
+                intervened[n] = x₂.x
+            else
+                parents = inneighbors(model, n)
+                v = variable(model, n).func
+                if !(length(parents) == 0)
+                    if length(v) == 1
+                        if isa(v[1](intervened[parents]...), Member)
+                            intervened[n] = v[1](intervened[parents]...)(ω)
+                        else
+                            intervened[n] = v[1](intervened[parents]...)
+                        end
+                    else
+                        intervened[n] = v[1](v[2], intervened[parents]...)
+                    end
+                end
+            end
         end
     end
     return intervened
@@ -69,16 +85,30 @@ end
 apply_ps_intervention(model::CausalModel, x₁::Intervention, blocked_edges::BlockedEdges, x₂::Intervention) = 
     ω ->  apply_ps_intervention(model, x₁, blocked_edges, x₂, ω)
 
-function apply_ps_intervention(model::CausalModel, x₁::DifferentiableIntervention, blocked_edges::BlockedEdges, x₂::DifferentiableIntervention)
+function apply_ps_intervention(model::CausalModel, x₁::DifferentiableIntervention, blocked_edges::BlockedEdges, x₂::DifferentiableIntervention, ω::AbstractΩ = defω())
+    int_x₁ = apply_intervention(model, x₁)
     blocked_vertices = blocked_edges(model)
-    int_model_x₁ = apply_intervention(model, x₁)
-    int_model_x₂ = apply_intervention(model, x₂)
-    ps_int = []
-    for e in 1:length(blocked_vertices)
-        a = (1 - blocked_vertices[e]) * int_model_x₁[e] + blocked_vertices[e] * int_model_x₂[e]
-        ps_int = vcat(ps_int, a)
+    intervened = Float64[]
+    for n in 1:nv(model)
+        parents = inneighbors(model, n)
+        v = variable(model, n).func
+        if !(length(parents) == 0)
+            if length(v) == 1
+                if isa(v[1](intervened[parents]...), Member)
+                    elem = v[1](intervened[parents]...)(ω)
+                else
+                    elem = v[1](intervened[parents]...)
+                end
+            else
+                elem = v[1](v[2], intervened[parents]...)
+            end
+            elem = x₂.β[n]*elem .+ (1 .- x₂.β[n])*x₂.x[n]
+        else
+            elem = x₂.x[n]
+        end
+        intervened = [intervened; (1 - blocked_vertices[n])*elem .+ blocked_vertices[n]*int_x₁[n]]
     end
-    return ps_int
+    return intervened
 end
 
 "Apply the model to a path specific intervention given"
