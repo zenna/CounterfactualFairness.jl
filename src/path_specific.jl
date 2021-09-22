@@ -102,7 +102,7 @@ function apply_ps_intervention(model::CausalModel, x₁::DifferentiableIntervent
             else
                 elem = v[1](v[2], intervened[parents]...)
             end
-            elem = x₂.β[n]*elem .+ (1 .- x₂.β[n])*x₂.x[n]
+            elem = x₂.β[n]*elem + (1 - x₂.β[n])*x₂.x[n]
         else
             elem = x₂.x[n]
         end
