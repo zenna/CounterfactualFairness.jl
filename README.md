@@ -4,11 +4,14 @@
 
 It enables the user to do the following -
 - Produce a fully-specified causal model from a dataset.
-- Build a causal graph manually.
-- Apply the causal model to a context.
+- Build a causal graph by adding the exogenous and endogenous variables.
 - Compute interventions and counterfactuals.
 - Train a model to be counterfactually fair.
-- Verify counterfactual fairness.
+- Compute counterfactual effect and verify counterfactual fairness.
+
+The package also provides methods to compute counterfactuals and train models as given in the MLJ framework.
+
+For an introduction to the package, see [here](https://nextjournal.com/archanarw/counterfactualfairnessjl)
 
 # Installation
 
@@ -22,12 +25,3 @@ To start using the package,
 ```julia
 julia> using CounterfactualFairness
 ```
-
-To see examples of how to use the package: 
-
-```julia
-julia> using Pluto
-julia> Pluto.run()
-```
-
-Paste [this](plutodocs/cm.jl) link in "Open from file" section.
